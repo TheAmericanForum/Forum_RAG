@@ -1,0 +1,31 @@
+# Non-secret configuration (safe to commit). Secrets come from env / Heroku config vars.
+
+# The 4 policy areas. REPLACE these with the real names + one-line descriptions.
+# Until they are filled in, chunks are classified as "other" and area filtering is a no-op.
+policy_areas:
+  - name: "Growth, Infrastructure, and Roads"
+    description: "Concern about rapid growth in South Carolina and its impact on roads, infrastructure, and natural resources"
+  - name: "Responsive Elected Leaders"
+    description: "Focus on the accountability and responsiveness of elected officials in South Carolina"
+  - name: "Rising Cost of Living"
+    description: "Concern about the increasing cost of living in South Carolina, including housing, healthcare, utilities, and other essential expenses"
+  - name: "Slow Wage Growth"
+    description: "Concern about the slow growth of wages in South Carolina, impacting the standard of living and economic stability"
+
+chunk:
+  target_tokens: 350        # merge consecutive turns up to ~this many tokens per chunk
+  overlap_turns: 1          # overlap between consecutive chunks (in turns)
+  max_turns_per_chunk: 40   # hard cap on turns per chunk
+
+models:
+  embed: "text-embedding-3-large"   # OpenAI embeddings (3072-dim). Use -small for cheaper/1536-dim.
+  classify: "claude-haiku-4-5"      # cheap classifier for policy-area labeling
+  agent: "claude-sonnet-4-6"          # the query/answer agent
+
+retrieval:
+  top_k: 8
+
+qdrant:
+  collection: "chunks"
+  vector_size: 3072         # MUST match the embedding model's dimension
+  local_path: "./.qdrant"   # used only for local dev when QDRANT_URL is unset

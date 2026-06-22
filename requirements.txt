@@ -1,0 +1,14 @@
+anthropic
+openai
+qdrant-client
+tiktoken
+google-api-python-client
+google-auth
+fastapi
+uvicorn[standard]
+jinja2
+python-dotenv
+pydantic
+pyyaml
+rich
+tenacity
