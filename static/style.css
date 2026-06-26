@@ -1,16 +1,53 @@
 :root {
+  /* Brand fonts (see index.html <head> comment re: free substitutes) */
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+
+  /* Primary brand palette */
+  --palmetto-blue: #003366; /* Pantone 533-C */
+  --forum-blue: #004aad; /* Pantone 300-C */
+  --coast: #f4f4f2;
+  --khaki: #e4e0d4;
+  --sky: #c2dfed;
+  --water: #36a0e0; /* Pantone 279-C */
+
+  /* Secondary "state inspired" palette — sparing use only */
+  --state-gold: #ce8b3d;
+  --state-maroon: #7f263a;
+
   --bg: #ffffff;
-  --bg-sunken: #f7f7f8;
-  --fg: #0d0d0d;
-  --muted: #6e6e80;
-  --line: #e5e5e5;
-  --accent: #2b6cb0;
+  --bg-sunken: var(--coast);
+  --fg: var(--palmetto-blue);
+  --fg-body: #1a1a1a;
+  --muted: #5b6b7a;
+  --line: #dcd8cb;
+  --accent: var(--forum-blue);
   --accent-fg: #ffffff;
-  --bubble-user: #f0f4f9;
+  --accent-secondary: var(--water);
+  --bubble-user: var(--sky);
   --bubble-assistant: transparent;
   --radius: 14px;
-  --header-h: 56px;
+  --header-h: 76px;
   --composer-h: auto;
+  --shadow-tint: rgba(0,51,102,.06);
+}
+
+html[data-theme="dark"] {
+  --bg: #12161d;
+  --bg-sunken: #1b212a;
+  --fg: #d8e6f3; /* lighter blue stand-in for headings; palmetto-blue is too dark on a dark bg */
+  --fg-body: #e6e8eb;
+  --muted: #93a4b3;
+  --line: #2a323d;
+  --accent: #4a90d9;
+  --accent-fg: #ffffff;
+  --accent-secondary: #6cc0f0;
+  --bubble-user: #1f3a57;
+  --bubble-assistant: transparent;
+  --state-gold: #e0a458;
+  --state-maroon: #e08a96;
+  --shadow-tint: rgba(0,0,0,.4);
 }
 
 * { box-sizing: border-box; }
@@ -21,11 +58,12 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  color: var(--fg);
+  font-family: var(--font-sans);
+  color: var(--fg-body);
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  transition: background-color .2s ease, color .2s ease;
 }
 
 /* ---------- Header ---------- */
@@ -41,42 +79,79 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+  transition: background-color .2s ease, border-color .2s ease;
 }
 
 .app-header .brand {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
 }
 
-.app-header .brand .dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: inline-block;
+.brand-mark {
+  width: 120px;
+  height: 120px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
 }
 
 .app-header h1 {
-  font-size: 1.02rem;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
   font-weight: 600;
+  color: var(--fg);
   margin: 0;
   letter-spacing: -0.01em;
 }
 
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg-sunken);
+  color: var(--fg-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+}
+
 .app-header .tagline {
   color: var(--muted);
-  font-size: .78rem;
+  font-size: .76rem;
+  font-style: italic;
 }
 
 .filter-select {
   font: inherit;
-  font-size: .85rem;
-  padding: 6px 10px;
-  border-radius: 8px;
+  font-size: .82rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg-sunken);
-  color: var(--fg);
+  color: var(--fg-body);
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 /* ---------- Chat area ---------- */
@@ -107,6 +182,7 @@ body {
 }
 
 .empty-state .empty-title {
+  font-family: var(--font-serif);
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--fg);
@@ -131,7 +207,7 @@ body {
   color: #fff;
 }
 
-.msg.user .avatar { background: #444654; }
+.msg.user .avatar { background: var(--palmetto-blue); }
 .msg.assistant .avatar { background: var(--accent); }
 
 .msg .bubble-col {
@@ -177,7 +253,7 @@ body {
 }
 .bubble.markdown li { margin: .2em 0; }
 .bubble.markdown a { color: var(--accent); text-decoration: none; }
-.bubble.markdown a:hover { text-decoration: underline; }
+.bubble.markdown a:hover { color: var(--accent-secondary); text-decoration: underline; }
 .bubble.markdown code {
   background: var(--bg-sunken);
   border-radius: 4px;
@@ -278,7 +354,7 @@ body {
 
 .source-card {
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--state-gold);
   border-radius: 0 10px 10px 0;
   padding: 8px 12px;
   background: var(--bg-sunken);
@@ -293,11 +369,11 @@ body {
 
 .source-card .quote {
   font-style: italic;
-  color: var(--fg);
+  color: var(--fg-body);
 }
 
 .source-card:target {
-  border-left-color: #b42318;
+  border-left-color: var(--state-maroon);
   background: var(--bg);
 }
 
@@ -310,7 +386,7 @@ body {
 }
 
 .error-text {
-  color: #b42318;
+  color: var(--state-maroon);
   font-size: .88rem;
 }
 
@@ -319,6 +395,7 @@ body {
   border-top: 1px solid var(--line);
   background: var(--bg);
   flex-shrink: 0;
+  transition: background-color .2s ease, border-color .2s ease;
 }
 
 .composer {
@@ -329,13 +406,38 @@ body {
 
 .composer form {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 8px 8px 8px 16px;
   background: var(--bg);
-  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  box-shadow: 0 1px 2px var(--shadow-tint);
+  transition: border-color .15s ease, background-color .2s ease, box-shadow .2s ease;
+}
+
+.composer form:focus-within {
+  border-color: var(--accent);
+}
+
+.composer-topbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.topic-label {
+  font-size: .72rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .composer textarea {
@@ -348,7 +450,7 @@ body {
   max-height: 200px;
   padding: 8px 0;
   background: transparent;
-  color: var(--fg);
+  color: var(--fg-body);
 }
 
 .composer button.send {

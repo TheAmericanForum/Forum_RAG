@@ -7,6 +7,21 @@ const askBtn = document.getElementById("ask");
 const chatInner = document.getElementById("chatInner");
 const emptyState = document.getElementById("emptyState");
 const chatScroll = document.getElementById("chatScroll");
+const themeToggle = document.getElementById("themeToggle");
+const themeToggleIcon = themeToggle.querySelector(".theme-toggle-icon");
+
+function applyThemeIcon(theme) {
+  // Icon shows the mode a click will switch *to*.
+  themeToggleIcon.textContent = theme === "dark" ? "☀️" : "🌙";
+}
+applyThemeIcon(document.documentElement.getAttribute("data-theme") || "light");
+
+themeToggle.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  applyThemeIcon(next);
+});
 
 marked.setOptions({ breaks: true, gfm: true });
 
@@ -34,7 +49,7 @@ function addAssistantMessage() {
   const msg = document.createElement("div");
   msg.className = "msg assistant";
   msg.innerHTML =
-    `<div class="avatar">SC</div>` +
+    `<div class="avatar">SCF</div>` +
     `<div class="bubble-col">` +
     `<p class="status-line"></p>` +
     `<div class="bubble markdown streaming"></div>` +
