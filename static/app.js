@@ -38,7 +38,8 @@ function addAssistantMessage() {
     `<div class="bubble-col">` +
     `<p class="status-line"></p>` +
     `<div class="bubble markdown streaming"></div>` +
-    `<div class="sources"></div>` +
+    `<details class="sources-toggle"><summary>Sources</summary>` +
+    `<div class="sources"></div></details>` +
     `</div>`;
   chatInner.appendChild(msg);
   scrollToBottom();
@@ -71,15 +72,24 @@ const MIN_MATCH_WORDS = 4;
 // The model sometimes quotes only a leading portion of the cited passage (drops a
 // trailing clause), so retry with progressively shorter trailing word counts before
 // giving up — favors the longest match we can actually find in the rendered text.
-function findQuoteEnd(text, citedText, fromIndex) {
+// Bound how far past the citation's known streamed position we'll search for its quote —
+// without this, a coincidental match far ahead can drag the cursor forward and strand
+// every citation in between at that same distant spot (the bug that caused footnotes to
+// pile up at one location instead of tracking their claims).
+const QUOTE_SEARCH_SLACK = 400;
+
+function findQuoteEnd(text, citedText, fromIndex, maxIndex) {
   const key = citationSearchKey(citedText);
   if (!key) return null;
+  const searchEnd = typeof maxIndex === "number" ? Math.min(text.length, maxIndex) : text.length;
+  if (searchEnd <= fromIndex) return null;
+  const window = text.slice(fromIndex, searchEnd);
   const words = key.split(" ").filter(Boolean);
   for (let n = words.length; n >= Math.min(MIN_MATCH_WORDS, words.length); n--) {
     const pattern = words.slice(0, n).map(escapeRegExp).join("\\s+");
     try {
       const re = new RegExp(pattern, "i");
-      const m = text.slice(fromIndex).match(re);
+      const m = window.match(re);
       if (m) {
         let end = fromIndex + m.index + m[0].length;
         while (end < text.length && '."?!,;:”\'’'.includes(text[end])) end++;
@@ -92,21 +102,54 @@ function findQuoteEnd(text, citedText, fromIndex) {
   return null;
 }
 
+// Paraphrased claims aren't quoted verbatim, so there's no span to match — instead we
+// anchor to the streamed character offset of the citation and snap forward to the end of
+// the sentence it falls in, so the marker lands after the claim rather than mid-word.
+function snapToSentenceEnd(text, from) {
+  let end = Math.max(0, Math.min(from, text.length));
+  while (end > 0 && /\s/.test(text[end - 1])) end--; // trim a trailing space in the offset
+  // Already sitting just after sentence punctuation (+ any closing quote)? Keep it —
+  // don't run forward and swallow the next sentence.
+  if (/[.?!]["'”’)\]]*$/.test(text.slice(Math.max(0, end - 4), end))) return end;
+  // Block ended mid-sentence: extend to the end of the sentence the claim falls in.
+  const re = /[.?!]["'”’)\]]*(?=\s|$)/g;
+  re.lastIndex = end;
+  const m = re.exec(text);
+  return m ? m.index + m[0].length : text.length;
+}
+
+// Place a footnote marker for each citation. Prefer the precise spot right after a
+// verbatim quote of the cited passage; for paraphrased claims (no verbatim span in the
+// answer) fall back to the streamed position, snapped to the enclosing sentence's end.
 function insertFootnotes(text, occurrences) {
   let result = "";
   let cursor = 0;
+  let lastEnd = -1;
+  let lastIndex = -1;
   for (const occ of occurrences) {
-    const end = findQuoteEnd(text, occ.cited_text, cursor);
-    if (end == null) continue; // couldn't locate the quote verbatim; skip rather than misplace
+    const maxIndex =
+      typeof occ.pos === "number" ? occ.pos + QUOTE_SEARCH_SLACK : undefined;
+    let end = findQuoteEnd(text, occ.cited_text, cursor, maxIndex);
+    if (end == null) {
+      if (typeof occ.pos !== "number") continue; // no quote and no anchor; skip
+      end = snapToSentenceEnd(text, Math.max(cursor, occ.pos));
+    }
+    if (end === lastEnd && occ.index === lastIndex) continue; // duplicate on same span
     result += text.slice(cursor, end) + `[[${occ.index}]](#cite-${occ.index})`;
     cursor = end;
+    lastEnd = end;
+    lastIndex = occ.index;
   }
   result += text.slice(cursor);
   return result;
 }
 
 function renderSources(sourcesEl, sources) {
-  if (!sources || sources.length === 0) return;
+  const toggleEl = sourcesEl.closest(".sources-toggle");
+  if (!sources || sources.length === 0) {
+    if (toggleEl) toggleEl.remove();
+    return;
+  }
   sourcesEl.innerHTML = "";
   sources.forEach((s) => {
     const src = s.source || {};
@@ -162,9 +205,12 @@ async function ask(question, policyArea) {
         } else if (ev.type === "token") {
           raw += ev.text;
           bubbleEl.innerHTML = renderMarkdown(raw);
-          scrollToBottom();
         } else if (ev.type === "citation") {
-          citationOccurrences.push({ index: ev.index, cited_text: ev.cited_text });
+          citationOccurrences.push({
+            index: ev.index,
+            cited_text: ev.cited_text,
+            pos: ev.pos,
+          });
         } else if (ev.type === "done") {
           statusEl.textContent = "";
           bubbleEl.classList.remove("streaming");

@@ -68,9 +68,34 @@ RETRIEVE_SYSTEM = (
 SYNTH_SYSTEM = (
     "You answer questions about community policy discussions using ONLY the provided "
     "transcript excerpts. Center the response on the PROPOSALS raised and the TRADE-OFFS "
-    "and concerns discussed. Be specific and faithful to the sources, and cite the exact "
-    "passages that support each claim. If the excerpts do not cover something, say so "
-    "rather than guessing."
+    "and concerns discussed, and highlight where there is CONSENSUS and where there is "
+    "DISAGREEMENT.\n\n"
+    "WRITING STYLE\n"
+    "- Write in clear, professional, grammatically correct English. The excerpts are "
+    "machine-generated transcripts and may contain transcription errors, filler, or "
+    "awkward, stilted, or archaic wording. When you state participants' points in your "
+    "own words, render them in clean, natural prose — never reproduce transcription "
+    "artifacts or unnatural phrasing (e.g. write \"new revenue\" or \"funding,\" not "
+    "\"new monies\"). Silently correct obvious errors when you paraphrase.\n\n"
+    "QUOTATIONS\n"
+    "- Quote sparingly. Only quote when a participant's specific wording is itself "
+    "notable; paraphrase most points.\n"
+    "- Whenever you reproduce a participant's exact words, enclose them in double "
+    "quotation marks. Never present someone's exact words without quotation marks.\n"
+    "- Only quote a passage verbatim if it is already clean and grammatical. If a passage "
+    "is garbled by transcription errors, paraphrase it in clean prose instead of quoting "
+    "it — but still cite it, so the exact source appears in the footnote.\n\n"
+    "CITATIONS\n"
+    "- Support every factual claim drawn from the transcripts with a citation to the exact "
+    "supporting passage, whether you quote it or paraphrase it.\n"
+    "- If the excerpts do not cover something, say so rather than guessing.\n\n"
+    "ATTRIBUTION\n"
+    "- Never refer to a participant by their speaker label (e.g. \"S1\", \"S3\") in the body "
+    "of your answer — those labels are internal IDs, not how a reader should see a person "
+    "described. Use natural language instead: \"one resident said,\" \"another participant "
+    "noted,\" \"a board member countered,\" \"several attendees agreed,\" etc.\n"
+    "- The footnote citations themselves will still show which speaker said what — you do "
+    "not need to (and should not) embed the speaker label in the sentence to compensate."
 )
 
 
@@ -155,12 +180,15 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
             "type": "text",
             "text": (
                 f"Question: {q}\n\nAnswer using the excerpts above. Cite the exact "
-                "supporting passages for every claim."
+                "supporting passage for every claim. Quote only clean, notable wording "
+                "(in double quotation marks) and paraphrase everything else in clear, "
+                "professional prose."
             ),
         }
     )
 
     footnotes: dict[tuple, int] = {}  # (chunk_id, cited_text) -> 1-based footnote number
+    answer_chars = 0  # running length of answer text streamed so far (footnote anchor)
     try:
         with _client_().messages.stream(
             model=settings.models.agent,
@@ -176,6 +204,7 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
                 delta = event.delta
                 dtype = getattr(delta, "type", None)
                 if dtype == "text_delta":
+                    answer_chars += len(delta.text)
                     yield {"type": "token", "text": delta.text}
                 elif dtype == "citations_delta":
                     cit = getattr(delta, "citation", None)
@@ -185,11 +214,15 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
                     key = (src.get("chunk_id") if src else idx, cited_text)
                     if key not in footnotes:
                         footnotes[key] = len(footnotes) + 1
+                    # Anchor to answer_chars right now — the cited span has already
+                    # streamed as text by the time this delta arrives, so this is the
+                    # true position of the claim, not just the position at block end.
                     yield {
                         "type": "citation",
                         "cited_text": cited_text,
                         "source": _source_meta(src),
                         "index": footnotes[key],
+                        "pos": answer_chars,
                     }
     except Exception as e:
         log.error("Synthesis stream failed: %s", e)
@@ -270,7 +303,7 @@ def answer(
                 "cited_text": ev["cited_text"],
                 "source": ev["source"],
                 "index": ev["index"],
-            }
+            }  # "pos" is per-occurrence and intentionally not carried into `done.sources`
         yield ev
 
     sources = [collected[i] for i in sorted(collected)]

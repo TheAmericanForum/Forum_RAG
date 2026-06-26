@@ -237,8 +237,40 @@ body {
 }
 
 /* ---------- Sources ---------- */
+.sources-toggle {
+  margin-top: 24px;
+}
+
+.sources-toggle summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-size: .82rem;
+  font-weight: 500;
+  color: #aaa;
+  list-style: none;
+  user-select: none;
+}
+
+.sources-toggle summary::-webkit-details-marker {
+  display: none;
+}
+
+.sources-toggle summary::before {
+  content: "^";
+  display: inline-block;
+  font-weight: 700;
+  transform: rotate(180deg);
+  transition: transform .15s ease;
+}
+
+.sources-toggle[open] summary::before {
+  transform: rotate(0deg);
+}
+
 .sources {
-  margin-top: 14px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;

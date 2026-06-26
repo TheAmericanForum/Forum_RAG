@@ -55,7 +55,7 @@ python ingest_data.py --source local:./data
 python main.py --show-progress "What trade-offs were raised about <area>?"
 
 # Or run the web UI:
-uvicorn app:app --reload --port 5050        # open http://127.0.0.1:5050
+      # open http://127.0.0.1:5050
 ```
 
 `--source drive` ingests from Google Drive instead (needs `GOOGLE_SERVICE_ACCOUNT_JSON` +
