@@ -198,6 +198,10 @@ async function ask(question, policyArea) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, policy_area: policyArea || null }),
     });
+    if (resp.status === 401) {
+      window.location.href = "/";
+      return;
+    }
     if (!resp.ok || !resp.body) throw new Error(`Request failed (${resp.status})`);
 
     const reader = resp.body.getReader();
