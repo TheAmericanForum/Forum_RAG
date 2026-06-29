@@ -1,0 +1,4 @@
+/* Per-tenant palette overrides, loaded after style.css.
+   SC is the default brand, so this file is intentionally empty —
+   the canonical palette lives in static/style.css :root.
+   To rebrand another tenant, override the :root / dark vars here. */

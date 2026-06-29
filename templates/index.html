@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The South Carolina Forum</title>
-  <link rel="icon" href="/static/images/favicon.svg" />
+  <title>{{ brand.app_name }}</title>
+  <link rel="icon" href="/brand/favicon.svg" />
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/brand/theme.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!--
@@ -33,14 +34,7 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="brand">
-      <!-- Logo mark provided by the user; drop the real file at static/images/logo-mark.svg -->
-      <img class="brand-mark" src="/static/images/logo-mark.svg" alt="" aria-hidden="true" />
-      <div class="brand-text">
-        <h1>The South Carolina Forum</h1>
-        <span class="tagline">Our Future. One table. Everyone gets a seat.</span>
-      </div>
-    </div>
+    {% include "_brand.html" %}
     <div class="user-menu">
       <span class="user-email">{{ user.email }}</span>
       <a class="logout-link" href="/auth/logout">Log out</a>
@@ -53,7 +47,7 @@
   <main class="chat-scroll" id="chatScroll">
     <div class="chat-inner" id="chatInner">
       <div class="empty-state" id="emptyState">
-        <div class="empty-title">The South Carolina Forum</div>
+        <div class="empty-title">{{ brand.app_name }}</div>
         <p>Ask about the proposals and trade-offs raised across the policy areas. Answers cite the exact transcript passages — speaker, table, and timestamp.</p>
       </div>
     </div>

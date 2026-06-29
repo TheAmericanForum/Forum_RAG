@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign in — The South Carolina Forum</title>
-  <link rel="icon" href="/static/images/favicon.svg" />
+  <title>Sign in — {{ brand.app_name }}</title>
+  <link rel="icon" href="/brand/favicon.svg" />
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/brand/theme.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -22,13 +23,7 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="brand">
-      <img class="brand-mark" src="/static/images/logo-mark.svg" alt="" aria-hidden="true" />
-      <div class="brand-text">
-        <h1>The South Carolina Forum</h1>
-        <span class="tagline">Our Future. One table. Everyone gets a seat.</span>
-      </div>
-    </div>
+    {% include "_brand.html" %}
   </header>
 
   <main class="auth-page">
