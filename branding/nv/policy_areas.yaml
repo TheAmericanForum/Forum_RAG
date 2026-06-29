@@ -12,7 +12,7 @@
 policy_areas:
   - name: "Housing Affordability"
     description: "Nevadans are discussing how people can find and keep housing that fits their income, family needs, and community ties"
-  - name: Rising Cost of Living (Healthcare Focus)"
+  - name: "Rising Cost of Living (Healthcare Focus)"
     description: "Housing, health care, and other household expenses are all putting the squeeze on Nevadans. Many Nevadans are asking whether work, household income, and public support create enough coverage for basic costs, emergencies, and savings."
   - name: "Growth, Water Scarcity, and Long-Term Supply"
     description: "Nevadans have several interrelated concerns about water scarcity and supply in Nevada: Colorado River supply uncertainty, groundwater stress, growth, large users such as data centers, rural and tribal interests, and ecosystems."
