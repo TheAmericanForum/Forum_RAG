@@ -248,6 +248,7 @@ def answer(
 
     base = f"{question}\n\n(Policy area: {policy_area})"
     messages: list[dict] = [{"role": "user", "content": base}]
+    any_search_errored = False
 
     yield {"type": "progress", "message": "Searching transcripts…"}
 
@@ -287,6 +288,7 @@ def answer(
                 # abort the whole answer — tell the model the search failed and move on.
                 log.warning("Search failed for query %r: %s", args.get("query"), e)
                 yield {"type": "progress", "message": f"search failed: {e}"}
+                any_search_errored = True
                 brief = []
             tool_results.append(
                 {"type": "tool_result", "tool_use_id": tu.id, "content": json.dumps(brief)}
@@ -295,7 +297,16 @@ def answer(
 
     chunks = list(gathered.values())
     if not chunks:
-        yield {"type": "token", "text": "I couldn't find any relevant passages in the indexed transcripts."}
+        if any_search_errored:
+            yield {
+                "type": "token",
+                "text": (
+                    "Sorry, I ran into a problem reaching the search service and "
+                    "couldn't complete this search. Please try again in a moment."
+                ),
+            }
+        else:
+            yield {"type": "token", "text": "I couldn't find any relevant passages in the indexed transcripts."}
         yield {"type": "done", "sources": []}
         return
 

@@ -24,14 +24,19 @@ def _client_():
         # makes every connection to api.openai.com fail deterministically even
         # though DNS resolves fine and retries don't help.
         http_client = httpx.Client(transport=httpx.HTTPTransport(local_address="0.0.0.0"))
-        _client = OpenAI(api_key=get_settings().require_openai_key(), http_client=http_client)
+        # max_retries=0: tenacity below is the sole retry authority. Letting the SDK
+        # retry internally too compounds backoff delay without buying extra resilience
+        # against the multi-second connectivity bursts seen from this dyno.
+        _client = OpenAI(
+            api_key=get_settings().require_openai_key(), http_client=http_client, max_retries=0
+        )
     return _client
 
 
 @retry(
     retry=retry_if_exception(is_retryable_api_error),
-    stop=stop_after_attempt(5),
-    wait=wait_exponential(multiplier=1, max=30),
+    stop=stop_after_attempt(7),
+    wait=wait_exponential(multiplier=1, max=15),
     reraise=True,
 )
 def _embed_batch(texts: list[str], model: str) -> list[list[float]]:
