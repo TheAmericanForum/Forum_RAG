@@ -1,0 +1,49 @@
+/* The New Hampshire Forum — palette overrides, loaded AFTER static/style.css.
+   Source: NH Forum Brand Guidelines, p.17 "Color Palette".
+
+   Federal Navy   #182A4C   anchor / headings / primary buttons
+   Granite White  #F6F1EA   warm neutral background
+   Birch Silver   #DBD6CD   borders / dividers
+   Mountain Stone #879DAF   muted text / cool accents
+   Charter Red    #D12921   used sparingly for emphasis
+   Liberty Gold   #C1941A   warm secondary accent
+
+   We override the raw palette tokens that style.css derives its semantic
+   tokens from (--bg-sunken, --fg, --accent, --accent-secondary, --bubble-user
+   all resolve through these), plus the three raw tokens used directly in rules
+   (--palmetto-blue, --state-gold, --state-maroon). */
+
+:root {
+  /* Raw palette remapped to NH (semantic tokens flow through these) */
+  --palmetto-blue: #182a4c; /* Federal Navy */
+  --forum-blue: #182a4c;    /* NH has no bright blue — navy anchors the accent */
+  --coast: #f6f1ea;         /* Granite White */
+  --khaki: #dbd6cd;         /* Birch Silver */
+  --sky: #dde3e8;           /* light Mountain Stone tint — user bubble */
+  --water: #c1941a;         /* Liberty Gold — secondary accent */
+  --state-gold: #c1941a;    /* Liberty Gold */
+  --state-maroon: #d12921;  /* Charter Red */
+
+  /* Semantic tokens with their own (non-derived) values in style.css */
+  --fg-body: #1f2733;       /* near-navy ink */
+  --muted: #6b7886;         /* Mountain Stone, darkened for body contrast */
+  --line: #dbd6cd;          /* Birch Silver */
+  --shadow-tint: rgba(24, 42, 76, 0.06);
+}
+
+html[data-theme="dark"] {
+  --bg: #0f1a2e;            /* deep navy derived from Federal Navy */
+  --bg-sunken: #16233a;
+  --fg: #f6f1ea;            /* Granite White headings — navy is too dark on dark */
+  --fg-body: #e7e3d9;
+  --muted: #97a7b6;         /* Mountain Stone */
+  --line: #28344a;          /* navy-tinted border */
+  --accent: #355688;        /* lightened navy so buttons read on dark */
+  --accent-fg: #ffffff;
+  --accent-secondary: #d8a93a; /* brightened Liberty Gold */
+  --bubble-user: #1e3052;   /* navy user bubble */
+  --state-gold: #d8a93a;
+  --state-maroon: #e2756c;  /* lightened Charter Red for dark legibility */
+  --palmetto-blue: #355688; /* avatar background on dark (used directly in rules) */
+  --shadow-tint: rgba(0, 0, 0, 0.4);
+}

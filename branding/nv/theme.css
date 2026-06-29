@@ -1,0 +1,50 @@
+/* The Nevada Forum — palette overrides, loaded AFTER static/style.css.
+   Source: NV Forum Brand Guidelines, p.18 "Color Palette".
+
+   Deep Purple   #8659B5   anchor / headings / primary buttons
+   Parchment     #F2F0ED   warm neutral background
+   Silver State  #D9D9D9   borders / dividers
+   Nevada Gold   #FFBF3F   warm secondary accent
+   Sage Green    #4A8C6F   grounded tertiary accent
+   Night Sky     #1A1A1F   high-contrast dark
+
+   We override the raw palette tokens that style.css derives its semantic
+   tokens from (--bg-sunken, --fg, --accent, --accent-secondary, --bubble-user
+   all resolve through these), plus the three raw tokens used directly in rules
+   (--palmetto-blue, --state-gold, --state-maroon). NV has no red, so the
+   --state-maroon slot carries Sage Green. */
+
+:root {
+  /* Raw palette remapped to NV (semantic tokens flow through these) */
+  --palmetto-blue: #8659b5; /* Deep Purple — anchor + avatar background */
+  --forum-blue: #8659b5;    /* NV has no bright blue — Deep Purple anchors the accent */
+  --coast: #f2f0ed;         /* Parchment */
+  --khaki: #d9d9d9;         /* Silver State */
+  --sky: #ece4f5;           /* light Deep Purple tint — user bubble */
+  --water: #ffbf3f;         /* Nevada Gold — secondary accent */
+  --state-gold: #ffbf3f;    /* Nevada Gold */
+  --state-maroon: #4a8c6f;  /* Sage Green (NV's third accent; no red in the palette) */
+
+  /* Semantic tokens with their own (non-derived) values in style.css */
+  --fg-body: #1f1b26;       /* near-black ink with a faint purple cast */
+  --muted: #6a6475;         /* desaturated purple-gray */
+  --line: #d9d9d9;          /* Silver State */
+  --shadow-tint: rgba(134, 89, 181, 0.07);
+}
+
+html[data-theme="dark"] {
+  --bg: #15131a;            /* Night Sky, nudged toward purple */
+  --bg-sunken: #1e1b25;
+  --fg: #f2f0ed;            /* Parchment headings — Deep Purple is too dark on dark */
+  --fg-body: #e8e4ec;
+  --muted: #9a93a6;
+  --line: #2e2a38;          /* purple-tinted border */
+  --accent: #a07fcb;        /* lightened Deep Purple so buttons read on dark */
+  --accent-fg: #ffffff;
+  --accent-secondary: #ffca5c; /* brightened Nevada Gold */
+  --bubble-user: #2d2640;   /* deep purple user bubble */
+  --state-gold: #ffca5c;
+  --state-maroon: #6bab8d;  /* lightened Sage Green for dark legibility */
+  --palmetto-blue: #a07fcb; /* avatar background on dark (used directly in rules) */
+  --shadow-tint: rgba(0, 0, 0, 0.4);
+}

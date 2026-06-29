@@ -1,0 +1,20 @@
+# Topic areas for TENANT=nv. Overrides the shared config.yaml list (see sc_rag/config.py).
+#
+# REPLACE the four placeholders below with Nevada's real topic areas.
+# - `name` shows in the Topic dropdown AND labels chunks during ingestion, so set
+#   these BEFORE ingesting NV transcripts (re-ingest if you change them later).
+# - `description` guides the classifier — one plain sentence about what belongs.
+# While names start with "Policy Area ", the app treats topics as unconfigured and
+# area filtering is a no-op.
+#
+# The NV brand guidelines repeatedly name housing, water, energy, education, and
+# economic growth as the issues shaping the state — likely starting points.
+policy_areas:
+  - name: "Housing Affordability"
+    description: "Nevadans are discussing how people can find and keep housing that fits their income, family needs, and community ties"
+  - name: Rising Cost of Living (Healthcare Focus)"
+    description: "Housing, health care, and other household expenses are all putting the squeeze on Nevadans. Many Nevadans are asking whether work, household income, and public support create enough coverage for basic costs, emergencies, and savings."
+  - name: "Growth, Water Scarcity, and Long-Term Supply"
+    description: "Nevadans have several interrelated concerns about water scarcity and supply in Nevada: Colorado River supply uncertainty, groundwater stress, growth, large users such as data centers, rural and tribal interests, and ecosystems."
+  - name: "K-12 Educational Resources, Outcomes, and Accountability"
+    description: "Nevadans are discussing the quality, accessibility, and outcomes of K-12 education, including resources, teacher support, student performance, and accountability measures."

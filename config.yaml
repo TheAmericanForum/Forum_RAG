@@ -1,16 +1,8 @@
 # Non-secret configuration (safe to commit). Secrets come from env / Heroku config vars.
 
-# The 4 policy areas. REPLACE these with the real names + one-line descriptions.
-# Until they are filled in, chunks are classified as "other" and area filtering is a no-op.
-policy_areas:
-  - name: "Growth, Infrastructure, and Roads"
-    description: "Concern about rapid growth in South Carolina and its impact on roads, infrastructure, and natural resources"
-  - name: "Responsive Elected Leaders"
-    description: "Focus on the accountability and responsiveness of elected officials in South Carolina"
-  - name: "Rising Cost of Living"
-    description: "Concern about the increasing cost of living in South Carolina, including housing, healthcare, utilities, and other essential expenses"
-  - name: "Slow Wage Growth"
-    description: "Concern about the slow growth of wages in South Carolina, impacting the standard of living and economic stability"
+# Policy/topic areas are per-tenant — each state owns its list in
+# branding/<tenant>/policy_areas.yaml (sc, nh, nv). A `policy_areas:` list here
+# would act only as a fallback for a tenant that ships no file of its own.
 
 chunk:
   target_tokens: 350        # merge consecutive turns up to ~this many tokens per chunk
