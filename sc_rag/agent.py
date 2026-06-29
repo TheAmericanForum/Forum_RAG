@@ -29,9 +29,14 @@ _client = None
 def _client_():
     global _client
     if _client is None:
+        import httpx
         from anthropic import Anthropic
 
-        _client = Anthropic(api_key=get_settings().require_anthropic_key())
+        # Force IPv4: some Heroku dynos have broken outbound IPv6 routing, which
+        # makes every connection fail deterministically even though DNS resolves
+        # fine and retries don't help. See sc_rag/embed.py for the same fix.
+        http_client = httpx.Client(transport=httpx.HTTPTransport(local_address="0.0.0.0"))
+        _client = Anthropic(api_key=get_settings().require_anthropic_key(), http_client=http_client)
     return _client
 
 
