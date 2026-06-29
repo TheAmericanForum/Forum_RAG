@@ -7,12 +7,11 @@
 # While names start with "Policy Area ", the app treats topics as unconfigured and
 # area filtering is a no-op.
 policy_areas:
-  - name: "Policy Area 1"
+  - name: "Housing Affordability and Ownership"
     description: "Rents and home prices have outpaced wages, making it hard for workers, young adults, and first-time buyers to enter or stay in the housing market."
-  - name: " Property Taxes and Revenue Needs"
+  - name: "Property Taxes and Revenue Needs"
     description: "New Hampshire’s heavy reliance on local property taxes (with no broad-based sales or income tax) strains homeowners, renters, businesses, and small towns."
   - name: "Public Education Funding"
     description: "Granite Staters are questioning the quality of K-12 education and how schools are funded, pointing to gaps in proficiency, equity, and student preparation."
-  - name: "Energy Cost, Sourcing, and Reliability "
+  - name: "Energy Cost, Sourcing, and Reliability"
     description: "Residents face some of the highest electricity rates in the country, with concerns about winter fuel prices, grid dependence on imports, and long-term reliability."
-``
