@@ -65,6 +65,13 @@ class Settings(BaseModel):
     google_service_account_json: Optional[str] = None
     drive_folder_ids: list[str] = []
 
+    # auth (Google SSO)
+    session_secret_key: Optional[str] = None
+    google_oauth_client_id: Optional[str] = None
+    google_oauth_client_secret: Optional[str] = None
+    allowed_emails: list[str] = []
+    contact_email: Optional[str] = None
+
     @property
     def policy_area_names(self) -> list[str]:
         return [a.name for a in self.policy_areas]
@@ -90,6 +97,21 @@ class Settings(BaseModel):
             )
         return self.openai_api_key
 
+    def require_session_secret(self) -> str:
+        if not self.session_secret_key:
+            raise ConfigError(
+                "SESSION_SECRET_KEY is not set. Add it to .env (local) or Heroku config vars."
+            )
+        return self.session_secret_key
+
+    def require_google_oauth(self) -> tuple[str, str]:
+        if not self.google_oauth_client_id or not self.google_oauth_client_secret:
+            raise ConfigError(
+                "GOOGLE_OAUTH_CLIENT_ID / GOOGLE_OAUTH_CLIENT_SECRET are not set. "
+                "Add them to .env (local) or Heroku config vars."
+            )
+        return self.google_oauth_client_id, self.google_oauth_client_secret
+
 
 @lru_cache
 def get_settings() -> Settings:
@@ -109,4 +131,11 @@ def get_settings() -> Settings:
     s.google_service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
     ids = os.getenv("DRIVE_FOLDER_IDS", "")
     s.drive_folder_ids = [x.strip() for x in ids.split(",") if x.strip()]
+
+    s.session_secret_key = os.getenv("SESSION_SECRET_KEY")
+    s.google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
+    s.google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+    emails = os.getenv("ALLOWED_EMAILS", "")
+    s.allowed_emails = [x.strip().lower() for x in emails.split(",") if x.strip()]
+    s.contact_email = os.getenv("CONTACT_EMAIL")
     return s

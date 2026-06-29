@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The South Carolina Forum</title>
-  <link rel="icon" href="/static/images/favicon.png" />
+  <link rel="icon" href="/static/images/favicon.svg" />
   <link rel="stylesheet" href="/static/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,9 +41,13 @@
         <span class="tagline">Our Future. One table. Everyone gets a seat.</span>
       </div>
     </div>
-    <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
-      <span class="theme-toggle-icon" aria-hidden="true"></span>
-    </button>
+    <div class="user-menu">
+      <span class="user-email">{{ user.email }}</span>
+      <a class="logout-link" href="/auth/logout">Log out</a>
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+        <span class="theme-toggle-icon" aria-hidden="true"></span>
+      </button>
+    </div>
   </header>
 
   <main class="chat-scroll" id="chatScroll">

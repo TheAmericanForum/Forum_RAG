@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in — The South Carolina Forum</title>
+  <link rel="icon" href="/static/images/favicon.svg" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap"
+    rel="stylesheet"
+  />
+  <script>
+    (function () {
+      var saved = localStorage.getItem("theme");
+      var theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <img class="brand-mark" src="/static/images/logo-mark.svg" alt="" aria-hidden="true" />
+      <div class="brand-text">
+        <h1>The South Carolina Forum</h1>
+        <span class="tagline">Our Future. One table. Everyone gets a seat.</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="auth-page">
+    <div class="auth-card">
+      <h2>Sign in to continue</h2>
+      <p>Access to The Forum is limited to approved accounts.</p>
+      <a class="btn-google" href="/auth/login">Sign in with Google</a>
+    </div>
+  </main>
+</body>
+</html>
