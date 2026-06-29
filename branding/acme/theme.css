@@ -1,0 +1,12 @@
+/* Per-tenant palette overrides for acme, loaded after style.css.
+   Override the brand colors here. Example:
+
+:root {
+  --palmetto-blue: #1a2b4a;   --forum-blue: #2f6fd0;
+  --water: #4aa3e0;           --sky: #d6e8f5;
+  --fg: var(--palmetto-blue); --accent: var(--forum-blue);
+}
+html[data-theme="dark"] {
+  --accent: #5a9fe0;
+}
+*/

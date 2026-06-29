@@ -23,6 +23,9 @@ themeToggle.addEventListener("click", () => {
   applyThemeIcon(next);
 });
 
+// Assistant avatar label, set per tenant (brand.initials) on the <body>.
+const brandInitials = document.body.dataset.brandInitials || "SCF";
+
 marked.setOptions({ breaks: true, gfm: true });
 
 function renderMarkdown(text) {
@@ -49,13 +52,14 @@ function addAssistantMessage() {
   const msg = document.createElement("div");
   msg.className = "msg assistant";
   msg.innerHTML =
-    `<div class="avatar">SCF</div>` +
+    `<div class="avatar"></div>` +
     `<div class="bubble-col">` +
     `<p class="status-line"></p>` +
     `<div class="bubble markdown streaming"></div>` +
     `<details class="sources-toggle"><summary>Sources</summary>` +
     `<div class="sources"></div></details>` +
     `</div>`;
+  msg.querySelector(".avatar").textContent = brandInitials;
   chatInner.appendChild(msg);
   scrollToBottom();
   return {

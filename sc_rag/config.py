@@ -22,10 +22,28 @@ log = logging.getLogger(__name__)
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = ROOT / "config.yaml"
 
+# Which deployment/brand this process serves. One codebase, many tenants:
+# set TENANT per Heroku app (sc, acme, globex, …). Branding + the per-tenant
+# brand.yaml live under branding/<tenant>/.
+TENANT = os.getenv("TENANT", "sc")
+BRANDING_DIR = ROOT / "branding"
+
 
 class PolicyArea(BaseModel):
     name: str
     description: str = ""
+
+
+class BrandCfg(BaseModel):
+    """Per-tenant branding text. Loaded from branding/<tenant>/brand.yaml.
+
+    Assets (logo-mark.svg, favicon.svg, theme.css) are files in the same
+    folder, served at /brand by app.py.
+    """
+    app_name: str = "The South Carolina Forum"
+    tagline: str = "Our Future. One table. Everyone gets a seat."
+    # Short label shown in the assistant's chat avatar (e.g. "SCF", "NHF").
+    initials: str = "SCF"
 
 
 class ChunkCfg(BaseModel):
@@ -51,6 +69,8 @@ class QdrantCfg(BaseModel):
 
 
 class Settings(BaseModel):
+    tenant: str = TENANT
+    brand: BrandCfg = BrandCfg()
     policy_areas: list[PolicyArea] = []
     chunk: ChunkCfg = ChunkCfg()
     models: ModelsCfg = ModelsCfg()
@@ -113,6 +133,36 @@ class Settings(BaseModel):
         return self.google_oauth_client_id, self.google_oauth_client_secret
 
 
+def _load_brand(tenant: str) -> BrandCfg:
+    path = BRANDING_DIR / tenant / "brand.yaml"
+    if not path.exists():
+        log.warning("brand.yaml not found at %s; using brand defaults.", path)
+        return BrandCfg()
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except yaml.YAMLError as e:
+        raise ConfigError(f"{path} is not valid YAML: {e}") from e
+    return BrandCfg(**data)
+
+
+def _load_policy_areas(tenant: str) -> Optional[list[PolicyArea]]:
+    """Per-tenant topic areas from branding/<tenant>/policy_areas.yaml.
+
+    The topics differ per state, so each tenant owns its own list here; when the
+    file is absent we fall back to the shared config.yaml. Mirrors config.yaml's
+    shape (a top-level `policy_areas:` list).
+    """
+    path = BRANDING_DIR / tenant / "policy_areas.yaml"
+    if not path.exists():
+        return None
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except yaml.YAMLError as e:
+        raise ConfigError(f"{path} is not valid YAML: {e}") from e
+    areas = data.get("policy_areas", data) if isinstance(data, dict) else data
+    return [PolicyArea(**a) for a in (areas or [])]
+
+
 @lru_cache
 def get_settings() -> Settings:
     data: dict = {}
@@ -124,6 +174,16 @@ def get_settings() -> Settings:
     else:
         log.warning("config.yaml not found at %s; using defaults.", CONFIG_PATH)
     s = Settings(**data)
+    s.tenant = TENANT
+    s.brand = _load_brand(TENANT)
+    # Per-tenant topic areas override the shared config.yaml list when present.
+    tenant_areas = _load_policy_areas(TENANT)
+    if tenant_areas is not None:
+        s.policy_areas = tenant_areas
+    # Per-tenant Qdrant collection: env overrides the shared config.yaml value so
+    # the three deployments don't share one collection name.
+    if os.getenv("QDRANT_COLLECTION"):
+        s.qdrant.collection = os.environ["QDRANT_COLLECTION"]
     s.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     s.openai_api_key = os.getenv("OPENAI_API_KEY")
     s.qdrant_url = os.getenv("QDRANT_URL")

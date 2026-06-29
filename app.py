@@ -21,7 +21,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from sc_rag import store
 from sc_rag.agent import answer
 from sc_rag.auth import build_flow, get_current_user, is_allowed_email, require_user, verify_id_token
-from sc_rag.config import get_settings
+from sc_rag.config import BRANDING_DIR, TENANT, get_settings
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="The South Carolina Forum", lifespan=lifespan)
+app = FastAPI(title=get_settings().brand.app_name, lifespan=lifespan)
 app.add_middleware(
     SessionMiddleware,
     secret_key=get_settings().require_session_secret(),
@@ -45,7 +45,11 @@ app.add_middleware(
     https_only=bool(get_settings().qdrant_url),
 )
 app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
+# Per-tenant branding assets (logo-mark.svg, favicon.svg, theme.css) served at /brand.
+app.mount("/brand", StaticFiles(directory=str(BRANDING_DIR / TENANT)), name="brand")
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
+# Expose brand text to every template without threading it through each handler.
+templates.env.globals["brand"] = get_settings().brand
 
 
 class Query(BaseModel):

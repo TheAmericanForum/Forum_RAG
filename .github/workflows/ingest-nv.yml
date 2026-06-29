@@ -1,0 +1,44 @@
+# Daily ingestion for the Nevada Forum (TENANT=nv).
+#
+# Runs ingest_data.py against NV's Drive folder(s) and upserts into the `nv_chunks`
+# Qdrant collection. The first run creates the collection (store.ensure_collection);
+# every run after is incremental — a file is skipped when its md5 already matches
+# what's stored, so only new/changed transcripts cost embeddings.
+#
+# Required GitHub secrets:
+#   Shared (same for all three states): QDRANT_URL, QDRANT_API_KEY,
+#     OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_SERVICE_ACCOUNT_JSON
+#   Per-state: DRIVE_FOLDER_IDS_NV  (comma-separated Drive folder IDs for NV)
+name: Ingest NV transcripts
+
+on:
+  schedule:
+    - cron: "40 8 * * *" # daily 08:40 UTC (staggered from SC/NH)
+  workflow_dispatch: {}
+
+concurrency:
+  group: ingest-nv
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TENANT: nv
+      QDRANT_COLLECTION: nv_chunks
+      QDRANT_URL: ${{ secrets.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      DRIVE_FOLDER_IDS: ${{ secrets.DRIVE_FOLDER_IDS_NV }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Ingest from Drive
+        run: python ingest_data.py --source drive --non-interactive
