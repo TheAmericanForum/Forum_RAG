@@ -1,4 +1,4 @@
-"""Agentic query agent: Opus 4.8 plans retrieval via a search tool, then writes a
+"""Agentic query agent: Sonnet plans retrieval via a search tool, then Opus writes a
 cited answer using Anthropic's native Citations over the retrieved passages.
 
 `answer(...)` is a generator yielding events consumed by both the CLI and the web API:
@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Iterator, Optional
 
 from .config import get_settings
@@ -132,6 +133,22 @@ def _doc_title(ch: dict) -> str:
     return f"{loc} · {speakers} · {_fmt_ms(ch.get('start_ms', 0))} ({turns})"
 
 
+def _do_search(
+    idx: int,
+    tool_use_id: str,
+    args: dict,
+    gathered: dict[str, dict],
+    *,
+    policy_area: str,
+) -> tuple[int, str, list, Any]:
+    try:
+        brief = _run_search(args, gathered, policy_area=policy_area)
+    except Exception as e:
+        log.warning("Search failed for query %r: %s", args.get("query"), e)
+        return idx, tool_use_id, [], e
+    return idx, tool_use_id, brief, None
+
+
 def _run_search(args: dict, gathered: dict[str, dict], *, policy_area: str) -> list[dict]:
     qv = embed_query(args["query"])
     results = store.search(
@@ -196,11 +213,9 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
     answer_chars = 0  # running length of answer text streamed so far (footnote anchor)
     try:
         with _client_().messages.stream(
-            model=settings.models.agent,
+            model=settings.models.synthesis_agent,
             max_tokens=8000,
             system=SYNTH_SYSTEM,
-            thinking={"type": "adaptive"},
-            output_config={"effort": "high"},
             messages=[{"role": "user", "content": content}],
         ) as stream:
             for event in stream:
@@ -255,12 +270,11 @@ def answer(
     for round_ in range(max_rounds):
         try:
             resp = client.messages.create(
-                model=settings.models.agent,
+                model=settings.models.retrieval_agent,
                 max_tokens=4000,
                 system=RETRIEVE_SYSTEM,
                 tools=[SEARCH_TOOL],
                 tool_choice={"type": "any"} if round_ == 0 else {"type": "auto"},
-                output_config={"effort": "low"},
                 messages=messages,
             )
         except Exception as e:
@@ -272,27 +286,37 @@ def answer(
         if not tool_uses:
             break
 
-        tool_results = []
+        # Normalize all tool call args up front so progress messages can be emitted
+        # before dispatching searches, and apply UI-level session/speaker defaults.
+        pending = []
         for tu in tool_uses:
             args = dict(tu.input)
-            # Apply UI-provided filters as defaults the model didn't override.
             if session and not args.get("session"):
                 args["session"] = session
             if speaker and not args.get("speaker"):
                 args["speaker"] = speaker
             yield {"type": "progress", "message": f"🔎 {args.get('query', '')}"}
-            try:
-                brief = _run_search(args, gathered, policy_area=policy_area)
-            except Exception as e:
-                # Don't let one bad search (e.g. a transient embedding/Qdrant error)
-                # abort the whole answer — tell the model the search failed and move on.
-                log.warning("Search failed for query %r: %s", args.get("query"), e)
-                yield {"type": "progress", "message": f"search failed: {e}"}
-                any_search_errored = True
-                brief = []
-            tool_results.append(
-                {"type": "tool_result", "tool_use_id": tu.id, "content": json.dumps(brief)}
-            )
+            pending.append((tu.id, args))
+
+        # Run all searches for this round in parallel (embed + Qdrant per call).
+        tool_results = [None] * len(pending)
+
+        with ThreadPoolExecutor(max_workers=len(pending)) as pool:
+            futures = {
+                pool.submit(_do_search, i, tid, args, gathered, policy_area=policy_area): i
+                for i, (tid, args) in enumerate(pending)
+            }
+            for fut in as_completed(futures):
+                idx, tid, brief, err = fut.result()
+                if err is not None:
+                    yield {"type": "progress", "message": f"search failed: {err}"}
+                    any_search_errored = True
+                    brief = []
+                tool_results[idx] = {
+                    "type": "tool_result",
+                    "tool_use_id": tid,
+                    "content": json.dumps(brief),
+                }
         messages.append({"role": "user", "content": tool_results})
 
     chunks = list(gathered.values())

@@ -55,7 +55,8 @@ class ChunkCfg(BaseModel):
 class ModelsCfg(BaseModel):
     embed: str = "text-embedding-3-large"
     classify: str = "claude-haiku-4-5"
-    agent: str = "claude-opus-4-8"
+    retrieval_agent: str = "claude-sonnet-4-6"
+    synthesis_agent: str = "claude-opus-4-8"
 
 
 class RetrievalCfg(BaseModel):

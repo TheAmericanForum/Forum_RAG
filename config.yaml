@@ -10,9 +10,10 @@ chunk:
   max_turns_per_chunk: 40   # hard cap on turns per chunk
 
 models:
-  embed: "text-embedding-3-large"   # OpenAI embeddings (3072-dim). Use -small for cheaper/1536-dim.
-  classify: "claude-haiku-4-5"      # cheap classifier for policy-area labeling
-  agent: "claude-opus-4-6"          # the query/answer agent
+  embed: "text-embedding-3-large"        # OpenAI embeddings (3072-dim). Use -small for cheaper/1536-dim.
+  classify: "claude-haiku-4-5"           # cheap classifier for policy-area labeling
+  retrieval_agent: "claude-sonnet-4-6"   # retrieval planner (tool-calling only, speed matters)
+  synthesis_agent: "claude-opus-4-8"     # cited answer synthesis (quality matters)
 
 retrieval:
   top_k: 8
