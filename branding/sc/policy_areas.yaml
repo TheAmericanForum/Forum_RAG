@@ -1,4 +1,4 @@
-# Topic areas for TENANT=sc. Overrides the shared config.yaml list (see sc_rag/config.py).
+# Topic areas for TENANT=sc. Overrides the shared config.yaml list (see forum_rag/config.py).
 #
 # `name` shows in the Topic dropdown AND labels chunks during ingestion, so changing
 # a name means re-ingesting SC's transcripts. `description` guides the classifier.

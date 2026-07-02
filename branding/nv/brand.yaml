@@ -1,4 +1,4 @@
-# Branding for TENANT=nv. Selected at boot by the TENANT env var (see sc_rag/config.py).
+# Branding for TENANT=nv. Selected at boot by the TENANT env var (see forum_rag/config.py).
 app_name: "The Nevada Forum"
 tagline: "Our Future. One table. Everyone gets a seat."
 initials: "NVF"  # shown in the assistant's chat avatar

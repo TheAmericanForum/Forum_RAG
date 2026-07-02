@@ -1,4 +1,4 @@
-# Topic areas for TENANT=nh. Overrides the shared config.yaml list (see sc_rag/config.py).
+# Topic areas for TENANT=nh. Overrides the shared config.yaml list (see forum_rag/config.py).
 #
 # REPLACE the four placeholders below with New Hampshire's real topic areas.
 # - `name` shows in the Topic dropdown AND labels chunks during ingestion, so set

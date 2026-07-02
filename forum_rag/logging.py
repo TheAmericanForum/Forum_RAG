@@ -1,7 +1,7 @@
 """Central logging setup. Call setup_logging() once at process start; every
 module then does `log = logging.getLogger(__name__)` as usual.
 
-Console output uses rich for readability; a rotating file (./logs/sc_rag.log)
+Console output uses rich for readability; a rotating file (./logs/forum_rag.log)
 keeps history for post-mortem debugging. Controlled by LOG_LEVEL (default INFO).
 """
 from __future__ import annotations
@@ -40,7 +40,7 @@ def setup_logging() -> None:
     try:
         LOG_DIR.mkdir(exist_ok=True)
         file_handler = logging.handlers.RotatingFileHandler(
-            LOG_DIR / "sc_rag.log", maxBytes=5_000_000, backupCount=3
+            LOG_DIR / "forum_rag.log", maxBytes=5_000_000, backupCount=3
         )
         file_handler.setFormatter(
             logging.Formatter("%(asctime)s %(levelname)-8s %(name)s: %(message)s")

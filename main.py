@@ -42,7 +42,7 @@ def _ask(console: Console, question: str, args) -> None:
         return
     except Exception:
         log.exception("Unexpected error answering question: %r", question)
-        console.print("\n[bold red]Unexpected error.[/] See logs/sc_rag.log for details.")
+        console.print("\n[bold red]Unexpected error.[/] See logs/forum_rag.log for details.")
         return
 
     sys.stdout.write("\n")
