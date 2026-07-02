@@ -17,9 +17,9 @@ import json
 import sys
 from collections import defaultdict
 
-from sc_rag import store
-from sc_rag.config import get_settings
-from sc_rag.errors import ExternalServiceError
+from forum_rag import store
+from forum_rag.config import get_settings
+from forum_rag.errors import ExternalServiceError
 
 
 def collect() -> list[dict]:

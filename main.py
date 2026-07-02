@@ -13,8 +13,8 @@ import sys
 
 from rich.console import Console
 
-from sc_rag.agent import answer
-from sc_rag.errors import ConfigError, ExternalServiceError
+from forum_rag.agent import answer
+from forum_rag.errors import ConfigError, ExternalServiceError
 
 log = logging.getLogger(__name__)
 

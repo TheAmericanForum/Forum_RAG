@@ -100,6 +100,28 @@ def list_transcript_files() -> list[DriveFile]:
     return files
 
 
+def read_allowed_emails(file_id: str, tenant: str) -> list[str]:
+    """Download a plain-text email allowlist from Drive and return emails for `tenant`.
+
+    Format: sections headed by [tenant] (e.g. [sc], [nv], [nh]), one email per line.
+    Lines starting with # and blank lines are ignored. A line that isn't a section
+    header and appears before any section header belongs to no tenant and is skipped.
+    """
+    data = download_file(file_id)
+    emails: list[str] = []
+    current_section: str | None = None
+    for line in data.decode(errors="replace").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("[") and line.endswith("]"):
+            current_section = line[1:-1].lower()
+            continue
+        if current_section == tenant.lower():
+            emails.append(line.lower())
+    return emails
+
+
 def download_file(file_id: str) -> bytes:
     from googleapiclient.http import MediaIoBaseDownload
 

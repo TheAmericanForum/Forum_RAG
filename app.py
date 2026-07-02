@@ -18,10 +18,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
-from sc_rag import store
-from sc_rag.agent import answer
-from sc_rag.auth import build_flow, get_current_user, is_allowed_email, require_user, verify_id_token
-from sc_rag.config import BRANDING_DIR, TENANT, get_settings
+from forum_rag import store
+from forum_rag.agent import answer
+from forum_rag.auth import build_flow, get_current_user, is_allowed_email, require_user, verify_id_token
+from forum_rag.config import BRANDING_DIR, TENANT, get_settings
 
 log = logging.getLogger(__name__)
 

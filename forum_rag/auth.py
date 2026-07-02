@@ -6,7 +6,9 @@ ID token with `google.oauth2.id_token.verify_oauth2_token`.
 """
 from __future__ import annotations
 
+import logging
 import os
+import time
 from typing import Optional
 
 from fastapi import HTTPException, Request
@@ -15,6 +17,32 @@ from google.oauth2 import id_token as google_id_token
 from google_auth_oauthlib.flow import Flow
 
 from .config import get_settings
+
+log = logging.getLogger(__name__)
+
+_EMAILS_TTL = 300  # re-fetch from Drive at most once every 5 minutes
+_emails_cache: list[str] = []
+_emails_fetched_at: float = 0.0
+
+
+def _get_allowed_emails() -> list[str]:
+    global _emails_cache, _emails_fetched_at
+    s = get_settings()
+    if not s.allowed_emails_file_id:
+        return s.allowed_emails
+    now = time.monotonic()
+    if now - _emails_fetched_at < _EMAILS_TTL:
+        return _emails_cache
+    try:
+        from .drive import read_allowed_emails
+        _emails_cache = read_allowed_emails(s.allowed_emails_file_id, s.tenant)
+        _emails_fetched_at = now
+        log.info("Loaded %d allowed emails from Drive file %s (tenant=%s)", len(_emails_cache), s.allowed_emails_file_id, s.tenant)
+    except Exception as e:
+        log.warning("Could not read allowed emails from Drive: %s; using cached/env list", e)
+        if not _emails_cache:
+            _emails_cache = s.allowed_emails
+    return _emails_cache
 
 # oauthlib refuses to complete a token exchange over plain HTTP. QDRANT_URL is only
 # set in production (Heroku, behind HTTPS); its absence means we're running local dev
@@ -46,8 +74,7 @@ def build_flow(redirect_uri: str) -> Flow:
 
 
 def is_allowed_email(email: str) -> bool:
-    s = get_settings()
-    return email.lower() in s.allowed_emails
+    return email.lower() in _get_allowed_emails()
 
 
 def verify_id_token(flow: Flow) -> dict:

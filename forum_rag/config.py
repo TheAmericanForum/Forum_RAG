@@ -91,6 +91,7 @@ class Settings(BaseModel):
     google_oauth_client_id: Optional[str] = None
     google_oauth_client_secret: Optional[str] = None
     allowed_emails: list[str] = []
+    allowed_emails_file_id: Optional[str] = None
     contact_email: Optional[str] = None
 
     @property
@@ -198,5 +199,6 @@ def get_settings() -> Settings:
     s.google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
     emails = os.getenv("ALLOWED_EMAILS", "")
     s.allowed_emails = [x.strip().lower() for x in emails.split(",") if x.strip()]
+    s.allowed_emails_file_id = os.getenv("ALLOWED_EMAILS_FILE_ID")
     s.contact_email = os.getenv("CONTACT_EMAIL")
     return s

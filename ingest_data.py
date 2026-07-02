@@ -18,13 +18,13 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from sc_rag import store
-from sc_rag.chunk import chunk_transcript
-from sc_rag.classify import resolve_policy_area
-from sc_rag.config import Settings, get_settings
-from sc_rag.embed import embed_texts
-from sc_rag.errors import ConfigError, ExternalServiceError
-from sc_rag.parse import parse_transcript
+from forum_rag import store
+from forum_rag.chunk import chunk_transcript
+from forum_rag.classify import resolve_policy_area
+from forum_rag.config import Settings, get_settings
+from forum_rag.embed import embed_texts
+from forum_rag.errors import ConfigError, ExternalServiceError
+from forum_rag.parse import parse_transcript
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def run_local(path: str, s: Settings, *, interactive: Optional[bool] = None) -> 
 
 
 def run_drive(s: Settings, *, interactive: Optional[bool] = None) -> tuple[int, list[str]]:
-    from sc_rag import drive
+    from forum_rag import drive
 
     files = drive.list_transcript_files()
     print(f"Found {len(files)} JSON file(s) in Drive")
