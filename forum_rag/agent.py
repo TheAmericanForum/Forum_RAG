@@ -17,9 +17,11 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Iterator, Optional
 
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+
 from .config import get_settings
 from .embed import embed_query
-from .errors import ExternalServiceError
+from .errors import ExternalServiceError, is_retryable_api_error
 from . import store
 
 log = logging.getLogger(__name__)
@@ -27,7 +29,8 @@ log = logging.getLogger(__name__)
 _client = None
 
 
-def _client_():
+def _get_client():
+    """Return the process-wide Anthropic client, creating it on first use."""
     global _client
     if _client is None:
         import httpx
@@ -106,53 +109,68 @@ SYNTH_SYSTEM = (
 
 
 def _fmt_ms(ms: Any) -> str:
-    s = int(ms or 0) // 1000
-    return f"{s // 60:02d}:{s % 60:02d}"
+    total_seconds = int(ms or 0) // 1000
+    return f"{total_seconds // 60:02d}:{total_seconds % 60:02d}"
 
 
-def _source_meta(ch: Optional[dict]) -> Optional[dict]:
-    if not ch:
+def _source_meta(chunk: Optional[dict]) -> Optional[dict]:
+    """Build the citation-facing metadata dict for one retrieved chunk (or None)."""
+    if not chunk:
         return None
     return {
-        "chunk_id": ch.get("chunk_id"),
-        "session": ch.get("session"),
-        "table": ch.get("table"),
-        "date": ch.get("date"),
-        "speakers": ch.get("speakers"),
-        "time": _fmt_ms(ch.get("start_ms", 0)),
-        "turn_start": ch.get("turn_start"),
-        "turn_end": ch.get("turn_end"),
+        "chunk_id": chunk.get("chunk_id"),
+        "citation_id": chunk.get("citation_id"),
+        "session": chunk.get("session"),
+        "table": chunk.get("table"),
+        "date": chunk.get("date"),
+        "speakers": chunk.get("speakers"),
+        "time": _fmt_ms(chunk.get("start_ms", 0)),
+        "turn_start": chunk.get("turn_start"),
+        "turn_end": chunk.get("turn_end"),
     }
 
 
-def _doc_title(ch: dict) -> str:
-    speakers = ", ".join(ch.get("speakers") or [])
-    table = f"table {ch['table']}" if ch.get("table") else ""
-    loc = " · ".join(p for p in [ch.get("session"), table, ch.get("date")] if p)
-    turns = f"turns {ch.get('turn_start')}-{ch.get('turn_end')}"
-    return f"{loc} · {speakers} · {_fmt_ms(ch.get('start_ms', 0))} ({turns})"
+def _doc_title(chunk: dict) -> str:
+    """Human-readable label shown to the model for a passage, e.g. in citation grounding."""
+    speakers = ", ".join(chunk.get("speakers") or [])
+    table = f"table {chunk['table']}" if chunk.get("table") else ""
+    location = " · ".join(p for p in [chunk.get("session"), table, chunk.get("date")] if p)
+    turns = f"turns {chunk.get('turn_start')}-{chunk.get('turn_end')}"
+    return f"{location} · {speakers} · {_fmt_ms(chunk.get('start_ms', 0))} ({turns})"
 
 
 def _do_search(
-    idx: int,
+    dispatch_idx: int,
     tool_use_id: str,
     args: dict,
     gathered: dict[str, dict],
     *,
     policy_area: str,
 ) -> tuple[int, str, list, Any]:
+    """Run one search_transcripts tool call, converting any failure into an error
+    value instead of raising, so one failed search doesn't abort the whole round.
+
+    `dispatch_idx` is this call's position in the batch of tool calls submitted to
+    the ThreadPoolExecutor this round; since they complete out of order (via
+    as_completed), the caller uses it to write each result back into a
+    same-length, order-preserving list.
+    """
     try:
         brief = _run_search(args, gathered, policy_area=policy_area)
     except Exception as e:
         log.warning("Search failed for query %r: %s", args.get("query"), e)
-        return idx, tool_use_id, [], e
-    return idx, tool_use_id, brief, None
+        return dispatch_idx, tool_use_id, [], e
+    return dispatch_idx, tool_use_id, brief, None
 
 
 def _run_search(args: dict, gathered: dict[str, dict], *, policy_area: str) -> list[dict]:
-    qv = embed_query(args["query"])
+    """Embed one query, search the store, and merge results into `gathered`
+    (a dict keyed by chunk_id, so the same chunk found by multiple queries across
+    multiple rounds is only kept once). Returns a brief (truncated) result summary
+    for the model — full chunk text stays in `gathered` for the synthesis step."""
+    query_vector = embed_query(args["query"])
     results = store.search(
-        qv,
+        query_vector,
         top_k=int(args.get("top_k") or get_settings().retrieval.top_k),
         policy_area=policy_area,
         session=args.get("session"),
@@ -160,48 +178,54 @@ def _run_search(args: dict, gathered: dict[str, dict], *, policy_area: str) -> l
     )
     log.debug("Search %r returned %d result(s)", args.get("query"), len(results))
     brief = []
-    for r in results:
-        gathered[r["chunk_id"]] = r  # keep full payload (incl. text) for synthesis
+    for result in results:
+        gathered[result["chunk_id"]] = result  # keep full payload (incl. text) for synthesis
         brief.append(
             {
-                "chunk_id": r["chunk_id"],
-                "session": r.get("session"),
-                "table": r.get("table"),
-                "speakers": r.get("speakers"),
-                "time": _fmt_ms(r.get("start_ms", 0)),
-                "policy_areas": r.get("policy_areas"),
-                "snippet": (r.get("text", "") or "")[:300],
+                "chunk_id": result["chunk_id"],
+                "session": result.get("session"),
+                "table": result.get("table"),
+                "speakers": result.get("speakers"),
+                "time": _fmt_ms(result.get("start_ms", 0)),
+                "policy_areas": result.get("policy_areas"),
+                "snippet": (result.get("text", "") or "")[:300],
             }
         )
     return brief
 
 
 def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Iterator[dict]:
-    """Stream a cited answer; yields token and citation events."""
+    """Stream a cited answer over `chunks`; yields token and citation events.
+
+    Not retried on failure: this is a live token stream already being forwarded to
+    the caller as it arrives (e.g. to the browser via SSE), so retrying after a
+    mid-stream failure would replay tokens already shown to the user. A failure here
+    ends the stream with an ExternalServiceError instead.
+    """
     settings = get_settings()
     content: list[dict] = []
     docs: list[dict] = []  # aligned to citation.document_index
-    for ch in chunks:
+    for chunk in chunks:
         content.append(
             {
                 "type": "document",
                 "source": {
                     "type": "text",
                     "media_type": "text/plain",
-                    "data": ch.get("text", "") or "",
+                    "data": chunk.get("text", "") or "",
                 },
-                "title": _doc_title(ch),
+                "title": _doc_title(chunk),
                 "citations": {"enabled": True},
             }
         )
-        docs.append(ch)
+        docs.append(chunk)
 
-    q = f"{question}\n\n(Policy area: {policy_area})"
+    question_with_area = f"{question}\n\n(Policy area: {policy_area})"
     content.append(
         {
             "type": "text",
             "text": (
-                f"Question: {q}\n\nAnswer using the excerpts above. Cite the exact "
+                f"Question: {question_with_area}\n\nAnswer using the excerpts above. Cite the exact "
                 "supporting passage for every claim. Quote only clean, notable wording "
                 "(in double quotation marks) and paraphrase everything else in clear, "
                 "professional prose."
@@ -212,7 +236,7 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
     footnotes: dict[tuple, int] = {}  # (chunk_id, cited_text) -> 1-based footnote number
     answer_chars = 0  # running length of answer text streamed so far (footnote anchor)
     try:
-        with _client_().messages.stream(
+        with _get_client().messages.stream(
             model=settings.models.synthesis_agent,
             max_tokens=8000,
             system=SYNTH_SYSTEM,
@@ -222,16 +246,28 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
                 if event.type != "content_block_delta":
                     continue
                 delta = event.delta
-                dtype = getattr(delta, "type", None)
-                if dtype == "text_delta":
+                delta_type = getattr(delta, "type", None)
+                if delta_type == "text_delta":
                     answer_chars += len(delta.text)
                     yield {"type": "token", "text": delta.text}
-                elif dtype == "citations_delta":
-                    cit = getattr(delta, "citation", None)
-                    idx = getattr(cit, "document_index", None)
-                    src = docs[idx] if isinstance(idx, int) and 0 <= idx < len(docs) else None
-                    cited_text = getattr(cit, "cited_text", "") or ""
-                    key = (src.get("chunk_id") if src else idx, cited_text)
+                elif delta_type == "citations_delta":
+                    citation = getattr(delta, "citation", None)
+                    doc_index = getattr(citation, "document_index", None)
+                    source_chunk = (
+                        docs[doc_index] if isinstance(doc_index, int) and 0 <= doc_index < len(docs) else None
+                    )
+                    if source_chunk is None:
+                        # Anthropic returned a document_index we can't map back to a
+                        # chunk — shouldn't happen given `docs` is built from the same
+                        # `content` sent in this request, but if it does, the footnote
+                        # below falls back to the raw (possibly None) doc_index as its
+                        # dedup key instead of a stable chunk_id.
+                        log.warning(
+                            "citations_delta document_index %r out of range for %d document(s)",
+                            doc_index, len(docs),
+                        )
+                    cited_text = getattr(citation, "cited_text", "") or ""
+                    key = (source_chunk.get("chunk_id") if source_chunk else doc_index, cited_text)
                     if key not in footnotes:
                         footnotes[key] = len(footnotes) + 1
                     # Anchor to answer_chars right now — the cited span has already
@@ -240,13 +276,42 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
                     yield {
                         "type": "citation",
                         "cited_text": cited_text,
-                        "source": _source_meta(src),
+                        "source": _source_meta(source_chunk),
                         "index": footnotes[key],
                         "pos": answer_chars,
                     }
     except Exception as e:
         log.error("Synthesis stream failed: %s", e)
         raise ExternalServiceError(f"Anthropic answer-synthesis request failed: {e}") from e
+
+
+@retry(
+    # Fewer attempts and a shorter cap than embed.py/classify.py's background-job
+    # retries: this call is in the critical path of a live, streamed user query, so
+    # it's better to fail fast with a clear error than make someone wait a long time
+    # for a retry chain to exhaust.
+    retry=retry_if_exception(is_retryable_api_error),
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, max=8),
+    reraise=True,
+)
+def _call_retrieval_planner(client, settings, messages: list[dict], round_num: int):
+    """Call the retrieval-planner model for one round of tool-calling."""
+    try:
+        return client.messages.create(
+            model=settings.models.retrieval_agent,
+            max_tokens=4000,
+            system=RETRIEVE_SYSTEM,
+            tools=[SEARCH_TOOL],
+            tool_choice={"type": "any"} if round_num == 0 else {"type": "auto"},
+            messages=messages,
+        )
+    except Exception as e:
+        if is_retryable_api_error(e):
+            log.warning("Retrieval planner call failed (round %d), will retry: %s", round_num, e)
+            raise
+        log.error("Retrieval planner call failed (round %d, non-retryable): %s", round_num, e)
+        raise ExternalServiceError(f"Anthropic retrieval-planning request failed: {e}") from e
 
 
 def answer(
@@ -257,8 +322,18 @@ def answer(
     speaker: Optional[str] = None,
     max_rounds: int = 6,
 ) -> Iterator[dict]:
+    """Answer a question end to end: plan and run searches (tool-use loop, up to
+    `max_rounds`), then stream a cited answer over whatever was found.
+
+    Each round asks the retrieval-planner model to call search_transcripts zero or
+    more times; `gathered` accumulates results in a dict keyed by chunk_id so the
+    same chunk surfaced by different queries (within or across rounds) is only kept
+    once. `any_search_errored` distinguishes "no results because nothing matched"
+    from "no results because the search backend failed", which drives different
+    user-facing messages if nothing was found by the time the loop ends.
+    """
     settings = get_settings()
-    client = _client_()
+    client = _get_client()
     gathered: dict[str, dict] = {}
 
     base = f"{question}\n\n(Policy area: {policy_area})"
@@ -267,21 +342,10 @@ def answer(
 
     yield {"type": "progress", "message": "Searching transcripts…"}
 
-    for round_ in range(max_rounds):
-        try:
-            resp = client.messages.create(
-                model=settings.models.retrieval_agent,
-                max_tokens=4000,
-                system=RETRIEVE_SYSTEM,
-                tools=[SEARCH_TOOL],
-                tool_choice={"type": "any"} if round_ == 0 else {"type": "auto"},
-                messages=messages,
-            )
-        except Exception as e:
-            log.error("Retrieval planner call failed (round %d): %s", round_, e)
-            raise ExternalServiceError(f"Anthropic retrieval-planning request failed: {e}") from e
+    for round_num in range(max_rounds):
+        resp = _call_retrieval_planner(client, settings, messages, round_num)
 
-        tool_uses = [b for b in resp.content if b.type == "tool_use"]
+        tool_uses = [block for block in resp.content if block.type == "tool_use"]
         messages.append({"role": "assistant", "content": resp.content})
         if not tool_uses:
             break
@@ -289,39 +353,41 @@ def answer(
         # Normalize all tool call args up front so progress messages can be emitted
         # before dispatching searches, and apply UI-level session/speaker defaults.
         pending = []
-        for tu in tool_uses:
-            args = dict(tu.input)
+        for tool_use_block in tool_uses:
+            args = dict(tool_use_block.input)
             if session and not args.get("session"):
                 args["session"] = session
             if speaker and not args.get("speaker"):
                 args["speaker"] = speaker
             yield {"type": "progress", "message": f"🔎 {args.get('query', '')}"}
-            pending.append((tu.id, args))
+            pending.append((tool_use_block.id, args))
 
         # Run all searches for this round in parallel (embed + Qdrant per call).
         tool_results = [None] * len(pending)
 
         with ThreadPoolExecutor(max_workers=len(pending)) as pool:
             futures = {
-                pool.submit(_do_search, i, tid, args, gathered, policy_area=policy_area): i
-                for i, (tid, args) in enumerate(pending)
+                pool.submit(_do_search, i, tool_use_id, args, gathered, policy_area=policy_area): i
+                for i, (tool_use_id, args) in enumerate(pending)
             }
-            for fut in as_completed(futures):
-                idx, tid, brief, err = fut.result()
+            for future in as_completed(futures):
+                dispatch_idx, tool_use_id, brief, err = future.result()
                 if err is not None:
                     yield {"type": "progress", "message": f"search failed: {err}"}
                     any_search_errored = True
                     brief = []
-                tool_results[idx] = {
+                tool_results[dispatch_idx] = {
                     "type": "tool_result",
-                    "tool_use_id": tid,
+                    "tool_use_id": tool_use_id,
                     "content": json.dumps(brief),
                 }
         messages.append({"role": "user", "content": tool_results})
 
+    rounds_used = round_num + 1
     chunks = list(gathered.values())
     if not chunks:
         if any_search_errored:
+            log.warning("Query %r found no chunks after search infrastructure errors", question)
             yield {
                 "type": "token",
                 "text": (
@@ -330,6 +396,7 @@ def answer(
                 ),
             }
         else:
+            log.info("Query %r returned no results (policy_area=%r)", question, policy_area)
             yield {"type": "token", "text": "I couldn't find any relevant passages in the indexed transcripts."}
         yield {"type": "done", "sources": []}
         return
@@ -347,4 +414,8 @@ def answer(
         yield ev
 
     sources = [collected[i] for i in sorted(collected)]
+    log.info(
+        "Query answered: %d chunk(s) gathered over %d round(s), %d citation(s)",
+        len(chunks), rounds_used, len(sources),
+    )
     yield {"type": "done", "sources": sources}

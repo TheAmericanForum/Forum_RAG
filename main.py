@@ -15,11 +15,13 @@ from rich.console import Console
 
 from forum_rag.agent import answer
 from forum_rag.errors import ConfigError, ExternalServiceError
+from forum_rag.logging import setup_logging
 
 log = logging.getLogger(__name__)
 
 
 def _ask(console: Console, question: str, args) -> None:
+    """Stream one answer to `question`, printing tokens live and sources at the end."""
     sources: list[dict] = []
     try:
         for ev in answer(
@@ -48,39 +50,43 @@ def _ask(console: Console, question: str, args) -> None:
     sys.stdout.write("\n")
     if sources:
         console.print("\n[bold]Sources[/]")
-        for i, s in enumerate(sources, 1):
-            src = s.get("source") or {}
-            speakers = ", ".join(src.get("speakers") or [])
-            table = f"table {src['table']}" if src.get("table") else ""
-            loc = " · ".join(p for p in [src.get("session"), table, src.get("date")] if p)
-            console.print(
-                f"[cyan][{i}][/] {loc} · {speakers} · {src.get('time')} "
-                f"(turns {src.get('turn_start')}-{src.get('turn_end')})"
+        for i, citation in enumerate(sources, 1):
+            source_meta = citation.get("source") or {}
+            speakers = ", ".join(source_meta.get("speakers") or [])
+            table = f"table {source_meta['table']}" if source_meta.get("table") else ""
+            location = " · ".join(
+                p for p in [source_meta.get("session"), table, source_meta.get("date")] if p
             )
-            quote = (s.get("cited_text") or "").strip()
+            console.print(
+                f"[cyan][{i}][/] {location} · {speakers} · {source_meta.get('time')} "
+                f"(turns {source_meta.get('turn_start')}-{source_meta.get('turn_end')})"
+            )
+            quote = (citation.get("cited_text") or "").strip()
             if quote:
                 console.print(f'    [italic dim]"{quote}"[/]')
 
 
 def _repl(console: Console, args) -> None:
+    """Interactive loop: read a question, answer it, repeat until Ctrl-C/EOF."""
     console.print("[bold]Policy-discussion RAG[/] — ask a question (Ctrl-C to exit).")
     try:
         while True:
-            q = console.input("\n[bold green]?[/] ").strip()
-            if q:
-                _ask(console, q, args)
+            user_input = console.input("\n[bold green]?[/] ").strip()
+            if user_input:
+                _ask(console, user_input, args)
     except (KeyboardInterrupt, EOFError):
         console.print("\nBye.")
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Query the policy-discussion RAG.")
-    ap.add_argument("question", nargs="*", help="Question to ask (omit for interactive mode).")
-    ap.add_argument("--policy-area", default=None)
-    ap.add_argument("--session", default=None)
-    ap.add_argument("--speaker", default=None)
-    ap.add_argument("--show-progress", action="store_true", help="Print retrieval progress.")
-    args = ap.parse_args()
+    setup_logging()
+    parser = argparse.ArgumentParser(description="Query the policy-discussion RAG.")
+    parser.add_argument("question", nargs="*", help="Question to ask (omit for interactive mode).")
+    parser.add_argument("--policy-area", default=None)
+    parser.add_argument("--session", default=None)
+    parser.add_argument("--speaker", default=None)
+    parser.add_argument("--show-progress", action="store_true", help="Print retrieval progress.")
+    args = parser.parse_args()
 
     console = Console()
     question = " ".join(args.question).strip()

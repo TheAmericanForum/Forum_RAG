@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Source — {{ brand.app_name }}</title>
+  <link rel="icon" href="/brand/favicon.svg" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/brand/theme.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap"
+    rel="stylesheet"
+  />
+  <script>
+    (function () {
+      var saved = localStorage.getItem("theme");
+      var theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+<body>
+  <header class="app-header">
+    {% include "_brand.html" %}
+    <div class="user-menu">
+      <span class="user-email">{{ user.email }}</span>
+      <a class="logout-link" href="/auth/logout">Log out</a>
+    </div>
+  </header>
+
+  <main class="source-page">
+    <a class="back-link" href="/">&larr; Back to {{ brand.app_name }}</a>
+    <div class="source-card source-card-full">
+      <div class="loc">
+        {{ [source.session, ("table " + source.table) if source.table else none, source.date] | select | join(" · ") }}
+        · {{ (source.speakers or []) | join(", ") }}
+        · turns {{ source.turn_start }}-{{ source.turn_end }}
+      </div>
+      <div class="quote source-transcript">{{ source.text }}</div>
+    </div>
+  </main>
+</body>
+</html>
