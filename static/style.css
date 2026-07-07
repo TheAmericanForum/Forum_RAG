@@ -437,6 +437,16 @@ body {
   margin-bottom: 3px;
 }
 
+.source-card .loc a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+}
+
+.source-card .loc a:hover {
+  text-decoration-color: var(--muted);
+}
+
 .source-card .quote {
   font-style: italic;
   color: var(--fg-body);
@@ -445,6 +455,40 @@ body {
 .source-card:target {
   border-left-color: var(--state-maroon);
   background: var(--bg);
+}
+
+.source-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--muted);
+  font-size: .88rem;
+  margin-bottom: 16px;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.source-card-full {
+  font-size: .95rem;
+  padding: 16px 20px;
+}
+
+.source-card-full .loc {
+  font-size: .85rem;
+  margin-bottom: 10px;
+}
+
+.source-transcript {
+  font-style: normal;
+  white-space: pre-wrap;
+  line-height: 1.6;
 }
 
 .bubble.markdown a[href^="#cite-"] {

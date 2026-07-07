@@ -68,6 +68,7 @@ def ingest_one(
     areas = [[area]] * len(chunks)
     vectors = embed_texts(texts)
 
+    existing_citation_ids = store.existing_citation_ids_for_file(drive_file_id)
     store.delete_file(drive_file_id)  # replace any prior version of this file
     store.upsert_chunks(
         chunks,
@@ -75,6 +76,7 @@ def ingest_one(
         drive_file_id=drive_file_id,
         source_md5=source_md5,
         policy_areas_by_chunk=areas,
+        existing_citation_ids=existing_citation_ids,
     )
     print(f"  ingested {len(chunks)} chunks: {name}")
     return len(chunks)

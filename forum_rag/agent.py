@@ -115,6 +115,7 @@ def _source_meta(ch: Optional[dict]) -> Optional[dict]:
         return None
     return {
         "chunk_id": ch.get("chunk_id"),
+        "citation_id": ch.get("citation_id"),
         "session": ch.get("session"),
         "table": ch.get("table"),
         "date": ch.get("date"),

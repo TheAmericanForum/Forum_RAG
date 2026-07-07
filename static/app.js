@@ -179,9 +179,20 @@ function renderSources(sourcesEl, sources) {
     div.className = "source-card";
     div.id = `cite-${s.index}`;
     div.innerHTML = `<div class="loc"></div><div class="quote"></div>`;
-    div.querySelector(".loc").textContent =
+    const locText =
       `[${s.index}] ${loc} · ${speakers} · ${src.time || ""} ` +
       `(turns ${src.turn_start}-${src.turn_end})`;
+    const locEl = div.querySelector(".loc");
+    if (src.citation_id) {
+      const a = document.createElement("a");
+      a.href = `/source/${src.citation_id}`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = locText;
+      locEl.appendChild(a);
+    } else {
+      locEl.textContent = locText;
+    }
     div.querySelector(".quote").textContent = `"${s.cited_text || ""}"`;
     sourcesEl.appendChild(div);
   });

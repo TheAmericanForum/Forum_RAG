@@ -124,6 +124,17 @@ def health():
     return {"ok": True}
 
 
+@app.get("/source/{citation_id}", response_class=HTMLResponse)
+def source(request: Request, citation_id: str):
+    user = get_current_user(request)
+    if user is None:
+        return templates.TemplateResponse(request, "login.html", {})
+    ch = store.get_by_citation_id(citation_id)
+    if ch is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return templates.TemplateResponse(request, "source.html", {"source": ch, "user": user})
+
+
 @app.post("/query")
 def query(q: Query, user: dict = Depends(require_user)):
     def gen():

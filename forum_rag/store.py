@@ -26,6 +26,7 @@ _PAYLOAD_INDEXES = [
     ("speakers", qm.PayloadSchemaType.KEYWORD),
     ("drive_file_id", qm.PayloadSchemaType.KEYWORD),
     ("transcript_id", qm.PayloadSchemaType.KEYWORD),
+    ("citation_id", qm.PayloadSchemaType.KEYWORD),
 ]
 
 
@@ -93,6 +94,59 @@ def stored_md5_for_file(drive_file_id: str) -> Optional[str]:
     return None
 
 
+def existing_citation_ids_for_file(drive_file_id: str) -> dict[str, str]:
+    """Return {chunk_id: citation_id} for every already-indexed chunk of this file.
+
+    Must be called before delete_file() so re-ingestion can carry forward each
+    chunk's permanent citation_id instead of minting a new one.
+    """
+    s = get_settings()
+    out: dict[str, str] = {}
+    offset = None
+    try:
+        while True:
+            points, offset = get_client().scroll(
+                collection_name=s.qdrant.collection,
+                scroll_filter=qm.Filter(
+                    must=[qm.FieldCondition(key="drive_file_id", match=qm.MatchValue(value=drive_file_id))]
+                ),
+                offset=offset,
+                limit=256,
+                with_payload=["chunk_id", "citation_id"],
+                with_vectors=False,
+            )
+            for p in points:
+                payload = p.payload or {}
+                cid = payload.get("citation_id")
+                chunk_id = payload.get("chunk_id")
+                if cid and chunk_id:
+                    out[chunk_id] = cid
+            if offset is None:
+                break
+    except Exception as e:
+        log.error("Qdrant scroll failed for drive_file_id=%r: %s", drive_file_id, e)
+        raise ExternalServiceError(f"Qdrant lookup failed for {drive_file_id!r}: {e}") from e
+    return out
+
+
+def get_by_citation_id(citation_id: str) -> Optional[dict[str, Any]]:
+    s = get_settings()
+    try:
+        points, _ = get_client().scroll(
+            collection_name=s.qdrant.collection,
+            scroll_filter=qm.Filter(
+                must=[qm.FieldCondition(key="citation_id", match=qm.MatchValue(value=citation_id))]
+            ),
+            limit=1,
+            with_payload=True,
+            with_vectors=False,
+        )
+    except Exception as e:
+        log.error("Qdrant scroll failed for citation_id=%r: %s", citation_id, e)
+        raise ExternalServiceError(f"Qdrant lookup failed for {citation_id!r}: {e}") from e
+    return points[0].payload if points else None
+
+
 def delete_file(drive_file_id: str) -> None:
     s = get_settings()
     try:
@@ -116,12 +170,16 @@ def upsert_chunks(
     drive_file_id: str,
     source_md5: str,
     policy_areas_by_chunk: list[list[str]],
+    existing_citation_ids: Optional[dict[str, str]] = None,
 ) -> None:
     s = get_settings()
+    existing_citation_ids = existing_citation_ids or {}
     points = []
     for ch, vec, areas in zip(chunks, vectors, policy_areas_by_chunk):
+        citation_id = existing_citation_ids.get(ch.chunk_id) or str(uuid.uuid4())
         payload = {
             "chunk_id": ch.chunk_id,
+            "citation_id": citation_id,
             "transcript_id": ch.transcript_id,
             "drive_file_id": drive_file_id,
             "source_md5": source_md5,
