@@ -30,19 +30,20 @@ class DriveFile:
 
 
 def _build_service():
+    """Return the process-wide Drive API service client, creating it on first use."""
     global _service
     if _service is None:
         from google.oauth2 import service_account
         from googleapiclient.discovery import build
 
-        s = get_settings()
-        if not s.google_service_account_json:
+        settings = get_settings()
+        if not settings.google_service_account_json:
             raise ConfigError(
                 "GOOGLE_SERVICE_ACCOUNT_JSON is not set. Paste the service-account key "
                 "JSON into that env var (and share the Drive folders with its email)."
             )
         try:
-            info = json.loads(s.google_service_account_json)
+            info = json.loads(settings.google_service_account_json)
         except json.JSONDecodeError as e:
             raise ConfigError(f"GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON: {e}") from e
         try:
@@ -55,6 +56,11 @@ def _build_service():
 
 
 def _walk(service, folder_id: str) -> Iterator[DriveFile]:
+    """Recursively yield every transcript JSON file under a Drive folder.
+
+    Descends into subfolders via `yield from`, and pages through each folder's
+    listing (`page_token`) until Drive stops returning a next-page token.
+    """
     page_token: Optional[str] = None
     while True:
         try:
@@ -73,16 +79,16 @@ def _walk(service, folder_id: str) -> Iterator[DriveFile]:
         except Exception as e:
             log.error("Drive list failed for folder %r: %s", folder_id, e)
             raise ExternalServiceError(f"Google Drive list failed for folder {folder_id!r}: {e}") from e
-        for f in resp.get("files", []):
-            mime = f.get("mimeType")
+        for drive_file in resp.get("files", []):
+            mime = drive_file.get("mimeType")
             if mime == "application/vnd.google-apps.folder":
-                yield from _walk(service, f["id"])
-            elif f["name"].lower().endswith(".json") or mime == "application/json":
+                yield from _walk(service, drive_file["id"])
+            elif drive_file["name"].lower().endswith(".json") or mime == "application/json":
                 yield DriveFile(
-                    id=f["id"],
-                    name=f["name"],
-                    modified_time=f.get("modifiedTime", ""),
-                    md5=f.get("md5Checksum", ""),
+                    id=drive_file["id"],
+                    name=drive_file["name"],
+                    modified_time=drive_file.get("modifiedTime", ""),
+                    md5=drive_file.get("md5Checksum", ""),
                 )
         page_token = resp.get("nextPageToken")
         if not page_token:
@@ -90,12 +96,13 @@ def _walk(service, folder_id: str) -> Iterator[DriveFile]:
 
 
 def list_transcript_files() -> list[DriveFile]:
-    s = get_settings()
-    if not s.drive_folder_ids:
+    """List every transcript JSON file across all configured Drive folders."""
+    settings = get_settings()
+    if not settings.drive_folder_ids:
         raise ConfigError("DRIVE_FOLDER_IDS is not set (comma-separated Drive folder IDs).")
     service = _build_service()
     files: list[DriveFile] = []
-    for folder_id in s.drive_folder_ids:
+    for folder_id in settings.drive_folder_ids:
         files.extend(_walk(service, folder_id))
     return files
 

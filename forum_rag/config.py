@@ -70,6 +70,11 @@ class QdrantCfg(BaseModel):
 
 
 class Settings(BaseModel):
+    """Resolved configuration for one process: config.yaml defaults, overridden by
+    per-tenant branding files, overridden by secrets/auth values from the environment.
+    See get_settings() for the exact precedence order.
+    """
+
     tenant: str = TENANT
     brand: BrandCfg = BrandCfg()
     policy_areas: list[PolicyArea] = []
@@ -167,6 +172,19 @@ def _load_policy_areas(tenant: str) -> Optional[list[PolicyArea]]:
 
 @lru_cache
 def get_settings() -> Settings:
+    """Resolve this process's Settings, cached for the life of the process.
+
+    Precedence, low to high:
+      1. config.yaml defaults (chunking, models, retrieval, base qdrant config).
+      2. Per-tenant branding overrides (TENANT env var selects branding/<tenant>/):
+         brand.yaml always overrides brand defaults; policy_areas.yaml, when present,
+         *replaces* (not merges with) config.yaml's policy_areas list.
+      3. QDRANT_COLLECTION env var, if set, overrides the collection name from step 1/2
+         so multiple tenant deployments don't share one Qdrant collection.
+      4. All secrets and auth settings (API keys, OAuth credentials, allowlist) are
+         read unconditionally from the environment — there is no yaml fallback for
+         these, since they're secrets by design.
+    """
     data: dict = {}
     if CONFIG_PATH.exists():
         try:
@@ -175,30 +193,33 @@ def get_settings() -> Settings:
             raise ConfigError(f"config.yaml is not valid YAML: {e}") from e
     else:
         log.warning("config.yaml not found at %s; using defaults.", CONFIG_PATH)
-    s = Settings(**data)
-    s.tenant = TENANT
-    s.brand = _load_brand(TENANT)
+    settings = Settings(**data)
+    settings.tenant = TENANT
+    settings.brand = _load_brand(TENANT)
     # Per-tenant topic areas override the shared config.yaml list when present.
     tenant_areas = _load_policy_areas(TENANT)
     if tenant_areas is not None:
-        s.policy_areas = tenant_areas
+        settings.policy_areas = tenant_areas
     # Per-tenant Qdrant collection: env overrides the shared config.yaml value so
     # the three deployments don't share one collection name.
     if os.getenv("QDRANT_COLLECTION"):
-        s.qdrant.collection = os.environ["QDRANT_COLLECTION"]
-    s.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-    s.openai_api_key = os.getenv("OPENAI_API_KEY")
-    s.qdrant_url = os.getenv("QDRANT_URL")
-    s.qdrant_api_key = os.getenv("QDRANT_API_KEY")
-    s.google_service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        settings.qdrant.collection = os.environ["QDRANT_COLLECTION"]
+    settings.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+    settings.openai_api_key = os.getenv("OPENAI_API_KEY")
+    settings.qdrant_url = os.getenv("QDRANT_URL")
+    settings.qdrant_api_key = os.getenv("QDRANT_API_KEY")
+    settings.google_service_account_json = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
     ids = os.getenv("DRIVE_FOLDER_IDS", "")
-    s.drive_folder_ids = [x.strip() for x in ids.split(",") if x.strip()]
+    settings.drive_folder_ids = [x.strip() for x in ids.split(",") if x.strip()]
 
-    s.session_secret_key = os.getenv("SESSION_SECRET_KEY")
-    s.google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
-    s.google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
+    settings.session_secret_key = os.getenv("SESSION_SECRET_KEY")
+    settings.google_oauth_client_id = os.getenv("GOOGLE_OAUTH_CLIENT_ID")
+    settings.google_oauth_client_secret = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
     emails = os.getenv("ALLOWED_EMAILS", "")
-    s.allowed_emails = [x.strip().lower() for x in emails.split(",") if x.strip()]
-    s.allowed_emails_file_id = os.getenv("ALLOWED_EMAILS_FILE_ID")
-    s.contact_email = os.getenv("CONTACT_EMAIL")
-    return s
+    settings.allowed_emails = [x.strip().lower() for x in emails.split(",") if x.strip()]
+    settings.allowed_emails_file_id = os.getenv("ALLOWED_EMAILS_FILE_ID")
+    settings.contact_email = os.getenv("CONTACT_EMAIL")
+    log.info(
+        "Settings resolved: tenant=%r qdrant_collection=%r", settings.tenant, settings.qdrant.collection
+    )
+    return settings

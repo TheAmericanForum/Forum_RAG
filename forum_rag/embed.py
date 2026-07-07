@@ -14,7 +14,8 @@ log = logging.getLogger(__name__)
 _client = None
 
 
-def _client_():
+def _get_client():
+    """Return the process-wide OpenAI client, creating it on first use."""
     global _client
     if _client is None:
         import httpx
@@ -34,24 +35,29 @@ def _client_():
 
 
 @retry(
+    # 7 attempts with exponential backoff (capped at 15s/attempt) is enough to ride
+    # out a typical OpenAI rate-limit or transient-outage window without the caller
+    # waiting an excessive amount of time overall.
     retry=retry_if_exception(is_retryable_api_error),
     stop=stop_after_attempt(7),
     wait=wait_exponential(multiplier=1, max=15),
     reraise=True,
 )
 def _embed_batch(texts: list[str], model: str) -> list[list[float]]:
+    """Embed one batch of texts, retrying transient failures and wrapping the rest."""
     try:
-        resp = _client_().embeddings.create(model=model, input=texts)
+        resp = _get_client().embeddings.create(model=model, input=texts)
     except Exception as e:
         if is_retryable_api_error(e):
             log.warning("Embedding call failed, will retry: %s", e)
             raise
         log.error("Embedding call failed (non-retryable): %s", e)
         raise ExternalServiceError(f"OpenAI embedding request failed: {e}") from e
-    return [d.embedding for d in resp.data]
+    return [embedding_data.embedding for embedding_data in resp.data]
 
 
 def embed_texts(texts: list[str], *, batch_size: int = 100) -> list[list[float]]:
+    """Embed a list of texts, batching requests to stay under OpenAI's per-call limits."""
     if not texts:
         return []
     model = get_settings().models.embed
@@ -62,4 +68,5 @@ def embed_texts(texts: list[str], *, batch_size: int = 100) -> list[list[float]]
 
 
 def embed_query(text: str) -> list[float]:
+    """Embed a single query string (e.g. for a similarity search)."""
     return embed_texts([text])[0]

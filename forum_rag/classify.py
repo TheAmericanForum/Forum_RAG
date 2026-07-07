@@ -22,7 +22,8 @@ log = logging.getLogger(__name__)
 _client = None
 
 
-def _client_():
+def _get_client():
+    """Return the process-wide Anthropic client, creating it on first use."""
     global _client
     if _client is None:
         from anthropic import Anthropic
@@ -32,6 +33,7 @@ def _client_():
 
 
 def _schema(area_names: list[str]) -> dict:
+    """JSON schema for structured classifier output: one area name, or 'other'."""
     enum = area_names + ["other"]
     return {
         "type": "object",
@@ -44,13 +46,17 @@ def _schema(area_names: list[str]) -> dict:
 
 
 @retry(
+    # Fewer attempts than embed.py's 7: a classify failure isn't fatal to ingestion —
+    # resolve_policy_area() falls back to filename keywords/manual choice/"other", so
+    # it's fine to give up on the model sooner and let those fallbacks take over.
     retry=retry_if_exception(is_retryable_api_error),
     stop=stop_after_attempt(4),
     wait=wait_exponential(multiplier=1, max=20),
     reraise=True,
 )
 def _classify_one(text: str, area_names: list[str], descriptions: list[str]) -> str:
-    s = get_settings()
+    """Ask the classifier model for the single best-matching policy area."""
+    settings = get_settings()
     areas_desc = "\n".join(f"- {n}: {d}" for n, d in zip(area_names, descriptions))
     prompt = (
         "You label a community policy-discussion transcript by the single policy area "
@@ -61,8 +67,8 @@ def _classify_one(text: str, area_names: list[str], descriptions: list[str]) -> 
         f"Transcript:\n{text}"
     )
     try:
-        resp = _client_().messages.create(
-            model=s.models.classify,
+        resp = _get_client().messages.create(
+            model=settings.models.classify,
             max_tokens=200,
             messages=[{"role": "user", "content": prompt}],
             output_config={"format": {"type": "json_schema", "schema": _schema(area_names)}},
@@ -85,15 +91,15 @@ def _classify_one(text: str, area_names: list[str], descriptions: list[str]) -> 
 
 def classify_transcript(text: str) -> str:
     """Return the single policy area for a whole transcript's text."""
-    s = get_settings()
+    settings = get_settings()
     if not text:
         return "other"
-    if not s.has_policy_areas:
+    if not settings.has_policy_areas:
         # Areas not configured yet — label "other" so ingestion still works.
         return "other"
 
-    area_names = [a.name for a in s.policy_areas]
-    descriptions = [a.description for a in s.policy_areas]
+    area_names = [area.name for area in settings.policy_areas]
+    descriptions = [area.description for area in settings.policy_areas]
     return _classify_one(text, area_names, descriptions)
 
 
@@ -103,6 +109,7 @@ _STOP = {"and", "or", "the", "of", "a", "an", "in", "on", "for", "to", "sc", "ta
 
 
 def _keywords(name: str) -> set[str]:
+    """Lowercase, stopword-filtered tokens from a name, for keyword-overlap matching."""
     return {w for w in re.split(r"[^a-z0-9]+", name.lower()) if len(w) > 2 and w not in _STOP}
 
 
@@ -111,37 +118,44 @@ def infer_area_from_filename(filename: str) -> Optional[str]:
 
     Returns the single best-matching area, or None if the filename carries no signal.
     """
-    s = get_settings()
-    if not s.has_policy_areas or not filename:
+    settings = get_settings()
+    if not settings.has_policy_areas or not filename:
         return None
-    fname_words = _keywords(Path(filename).stem)
-    if not fname_words:
+    filename_words = _keywords(Path(filename).stem)
+    if not filename_words:
         return None
     best, best_score = None, 0
-    for a in s.policy_areas:
-        score = len(_keywords(a.name) & fname_words)
+    for area in settings.policy_areas:
+        score = len(_keywords(area.name) & filename_words)
         if score > best_score:
-            best, best_score = a.name, score
+            best, best_score = area.name, score
     return best if best_score > 0 else None
 
 
 def prompt_manual_area(filename: str) -> str:
     """Interactively ask which policy area a transcript belongs to. Returns 'other' if skipped."""
-    area_names = [a.name for a in get_settings().policy_areas]
+    area_names = [area.name for area in get_settings().policy_areas]
     print(f"\nCould not classify transcript: {filename}", file=sys.stderr)
     print("Choose a policy area:", file=sys.stderr)
-    for i, n in enumerate(area_names, 1):
-        print(f"  {i}) {n}", file=sys.stderr)
+    for i, name in enumerate(area_names, 1):
+        print(f"  {i}) {name}", file=sys.stderr)
     print(f"  {len(area_names) + 1}) other", file=sys.stderr)
     while True:
-        choice = input("Enter number (blank = other): ").strip()
+        try:
+            choice = input("Enter number (blank = other): ").strip()
+        except (EOFError, KeyboardInterrupt):
+            # stdin closed/interrupted mid-prompt (e.g. an automated run that
+            # mis-detected a TTY) — fall back to "other" instead of crashing.
+            log.warning("Manual classification prompt interrupted for %r; labeling 'other'.", filename)
+            print("\nNo input available; labeling 'other'.", file=sys.stderr)
+            return "other"
         if not choice:
             return "other"
         if choice.isdigit():
-            k = int(choice)
-            if 1 <= k <= len(area_names):
-                return area_names[k - 1]
-            if k == len(area_names) + 1:
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(area_names):
+                return area_names[choice_num - 1]
+            if choice_num == len(area_names) + 1:
                 return "other"
         print("Invalid choice, try again.", file=sys.stderr)
 
