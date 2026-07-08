@@ -57,6 +57,10 @@ class ModelsCfg(BaseModel):
     classify: str = "claude-haiku-4-5"
     retrieval_agent: str = "claude-sonnet-4-6"
     synthesis_agent: str = "claude-opus-4-8"
+    # Used only when synthesis_agent stays overloaded after retries: a smaller,
+    # less capacity-constrained model so a busy period degrades quality instead of
+    # failing the request. Set equal to synthesis_agent to disable the fallback.
+    synthesis_agent_fallback: str = "claude-sonnet-5"
 
 
 class RetrievalCfg(BaseModel):
@@ -64,7 +68,7 @@ class RetrievalCfg(BaseModel):
 
 
 class QdrantCfg(BaseModel):
-    collection: str = "chunks"
+    collection: str = ""
     vector_size: int = 3072
     local_path: str = "./.qdrant"
 

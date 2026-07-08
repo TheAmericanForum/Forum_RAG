@@ -90,9 +90,14 @@ def _point_id(chunk_id: str) -> str:
 
 
 def iter_all_points(
-    scroll_filter: Optional[qm.Filter] = None, with_payload: Any = True
+    scroll_filter: Optional[qm.Filter] = None,
+    with_payload: Any = True,
+    collection_name: Optional[str] = None,
 ) -> Iterator[Any]:
-    """Yield every point in the configured collection matching `scroll_filter`.
+    """Yield every point in a collection matching `scroll_filter`.
+
+    Defaults to the collection resolved from settings; pass `collection_name` to
+    scan a specific one (e.g. to sweep several tenant collections in turn).
 
     Wraps Qdrant's scroll-with-pagination pattern (page through `next_page_offset`
     until it comes back None) in the same try/except -> ExternalServiceError used by
@@ -100,11 +105,12 @@ def iter_all_points(
     directly and lose that error handling.
     """
     settings = get_settings()
+    collection_name = collection_name or settings.qdrant.collection
     offset = None
     try:
         while True:
             points, offset = get_client().scroll(
-                collection_name=settings.qdrant.collection,
+                collection_name=collection_name,
                 scroll_filter=scroll_filter,
                 offset=offset,
                 limit=256,

@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Iterator, Optional
 
+from anthropic.types import TextBlockParam
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from .config import get_settings
@@ -62,6 +64,9 @@ SEARCH_TOOL = {
         },
         "required": ["query"],
     },
+    # Identical on every call, so mark it as the end of the cacheable system+tools
+    # prefix shared across every retrieval-planner request.
+    "cache_control": {"type": "ephemeral"},
 }
 
 RETRIEVE_SYSTEM = (
@@ -106,6 +111,11 @@ SYNTH_SYSTEM = (
     "- The footnote citations themselves will still show which speaker said what — you do "
     "not need to (and should not) embed the speaker label in the sentence to compensate."
 )
+
+
+def _cached_system(text: str) -> list[TextBlockParam]:
+    """Wrap a system prompt as a single cacheable block."""
+    return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
 
 
 def _fmt_ms(ms: Any) -> str:
@@ -197,10 +207,14 @@ def _run_search(args: dict, gathered: dict[str, dict], *, policy_area: str) -> l
 def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Iterator[dict]:
     """Stream a cited answer over `chunks`; yields token and citation events.
 
-    Not retried on failure: this is a live token stream already being forwarded to
-    the caller as it arrives (e.g. to the browser via SSE), so retrying after a
-    mid-stream failure would replay tokens already shown to the user. A failure here
-    ends the stream with an ExternalServiceError instead.
+    Retried only *before the first event is emitted*: the common failure here is a
+    retryable error (e.g. 429/529 overloaded) while establishing the stream, and
+    nothing has been forwarded to the caller yet, so re-establishing is safe. The
+    final retry falls back to a smaller model (synthesis_agent_fallback) so a
+    sustained overload of the primary degrades quality instead of failing. Once any
+    token/citation has been yielded (to the browser via SSE), a mid-stream failure
+    can't be retried without replaying already-shown output, so it ends the stream
+    with an ExternalServiceError instead.
     """
     settings = get_settings()
     content: list[dict] = []
@@ -233,56 +247,82 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
         }
     )
 
-    footnotes: dict[tuple, int] = {}  # (chunk_id, cited_text) -> 1-based footnote number
-    answer_chars = 0  # running length of answer text streamed so far (footnote anchor)
-    try:
-        with _get_client().messages.stream(
-            model=settings.models.synthesis_agent,
-            max_tokens=8000,
-            system=SYNTH_SYSTEM,
-            messages=[{"role": "user", "content": content}],
-        ) as stream:
-            for event in stream:
-                if event.type != "content_block_delta":
-                    continue
-                delta = event.delta
-                delta_type = getattr(delta, "type", None)
-                if delta_type == "text_delta":
-                    answer_chars += len(delta.text)
-                    yield {"type": "token", "text": delta.text}
-                elif delta_type == "citations_delta":
-                    citation = getattr(delta, "citation", None)
-                    doc_index = getattr(citation, "document_index", None)
-                    source_chunk = (
-                        docs[doc_index] if isinstance(doc_index, int) and 0 <= doc_index < len(docs) else None
-                    )
-                    if source_chunk is None:
-                        # Anthropic returned a document_index we can't map back to a
-                        # chunk — shouldn't happen given `docs` is built from the same
-                        # `content` sent in this request, but if it does, the footnote
-                        # below falls back to the raw (possibly None) doc_index as its
-                        # dedup key instead of a stable chunk_id.
-                        log.warning(
-                            "citations_delta document_index %r out of range for %d document(s)",
-                            doc_index, len(docs),
+    # Attempt plan: retry the primary synthesis model, then fall back to a smaller,
+    # less capacity-constrained model if it stays overloaded. Fallback is skipped
+    # when it's unset or identical to the primary (see synthesis_agent_fallback).
+    primary = settings.models.synthesis_agent
+    fallback = settings.models.synthesis_agent_fallback
+    attempt_models = [primary, primary]
+    if fallback and fallback != primary:
+        attempt_models.append(fallback)
+    max_attempts = len(attempt_models)
+    for attempt, model in enumerate(attempt_models, 1):
+        footnotes: dict[tuple, int] = {}  # (chunk_id, cited_text) -> 1-based footnote number
+        answer_chars = 0  # running length of answer text streamed so far (footnote anchor)
+        emitted = False  # whether any event has been yielded on this attempt
+        try:
+            with _get_client().messages.stream(
+                model=model,
+                max_tokens=8000,
+                system=_cached_system(SYNTH_SYSTEM),
+                messages=[{"role": "user", "content": content}],
+            ) as stream:
+                for event in stream:
+                    if event.type != "content_block_delta":
+                        continue
+                    delta = event.delta
+                    delta_type = getattr(delta, "type", None)
+                    if delta_type == "text_delta":
+                        answer_chars += len(delta.text)
+                        emitted = True
+                        yield {"type": "token", "text": delta.text}
+                    elif delta_type == "citations_delta":
+                        citation = getattr(delta, "citation", None)
+                        doc_index = getattr(citation, "document_index", None)
+                        source_chunk = (
+                            docs[doc_index] if isinstance(doc_index, int) and 0 <= doc_index < len(docs) else None
                         )
-                    cited_text = getattr(citation, "cited_text", "") or ""
-                    key = (source_chunk.get("chunk_id") if source_chunk else doc_index, cited_text)
-                    if key not in footnotes:
-                        footnotes[key] = len(footnotes) + 1
-                    # Anchor to answer_chars right now — the cited span has already
-                    # streamed as text by the time this delta arrives, so this is the
-                    # true position of the claim, not just the position at block end.
-                    yield {
-                        "type": "citation",
-                        "cited_text": cited_text,
-                        "source": _source_meta(source_chunk),
-                        "index": footnotes[key],
-                        "pos": answer_chars,
-                    }
-    except Exception as e:
-        log.error("Synthesis stream failed: %s", e)
-        raise ExternalServiceError(f"Anthropic answer-synthesis request failed: {e}") from e
+                        if source_chunk is None:
+                            # Anthropic returned a document_index we can't map back to a
+                            # chunk — shouldn't happen given `docs` is built from the same
+                            # `content` sent in this request, but if it does, the footnote
+                            # below falls back to the raw (possibly None) doc_index as its
+                            # dedup key instead of a stable chunk_id.
+                            log.warning(
+                                "citations_delta document_index %r out of range for %d document(s)",
+                                doc_index, len(docs),
+                            )
+                        cited_text = getattr(citation, "cited_text", "") or ""
+                        key = (source_chunk.get("chunk_id") if source_chunk else doc_index, cited_text)
+                        if key not in footnotes:
+                            footnotes[key] = len(footnotes) + 1
+                        # Anchor to answer_chars right now — the cited span has already
+                        # streamed as text by the time this delta arrives, so this is the
+                        # true position of the claim, not just the position at block end.
+                        emitted = True
+                        yield {
+                            "type": "citation",
+                            "cited_text": cited_text,
+                            "source": _source_meta(source_chunk),
+                            "index": footnotes[key],
+                            "pos": answer_chars,
+                        }
+            return  # stream completed successfully
+        except Exception as e:
+            # Only re-establish the stream if nothing has been forwarded to the caller
+            # yet (else we'd replay shown output) and the error is worth retrying.
+            if not emitted and attempt < max_attempts and is_retryable_api_error(e):
+                backoff = min(8, 2 ** (attempt - 1))
+                next_model = attempt_models[attempt]  # attempt is 1-based, so this is the next one
+                log.warning(
+                    "Synthesis stream on %s failed before any output (attempt %d/%d), "
+                    "retrying in %ds on %s: %s",
+                    model, attempt, max_attempts, backoff, next_model, e,
+                )
+                time.sleep(backoff)
+                continue
+            log.error("Synthesis stream failed: %s", e)
+            raise ExternalServiceError(f"Anthropic answer-synthesis request failed: {e}") from e
 
 
 @retry(
@@ -301,7 +341,7 @@ def _call_retrieval_planner(client, settings, messages: list[dict], round_num: i
         return client.messages.create(
             model=settings.models.retrieval_agent,
             max_tokens=4000,
-            system=RETRIEVE_SYSTEM,
+            system=_cached_system(RETRIEVE_SYSTEM),
             tools=[SEARCH_TOOL],
             tool_choice={"type": "any"} if round_num == 0 else {"type": "auto"},
             messages=messages,
@@ -339,6 +379,10 @@ def answer(
     base = f"{question}\n\n(Policy area: {policy_area})"
     messages: list[dict] = [{"role": "user", "content": base}]
     any_search_errored = False
+    # Tracks the most recently cache-marked message content block so each round's
+    # cache breakpoint can be moved forward rather than left to accumulate — the
+    # API allows at most 4 total (1 is already used by the static system+tools mark).
+    cached_block: Optional[dict] = None
 
     yield {"type": "progress", "message": "Searching transcripts…"}
 
@@ -363,7 +407,7 @@ def answer(
             pending.append((tool_use_block.id, args))
 
         # Run all searches for this round in parallel (embed + Qdrant per call).
-        tool_results = [None] * len(pending)
+        tool_results: list[dict] = [{} for _ in pending]
 
         with ThreadPoolExecutor(max_workers=len(pending)) as pool:
             futures = {
@@ -381,6 +425,12 @@ def answer(
                     "tool_use_id": tool_use_id,
                     "content": json.dumps(brief),
                 }
+        # Move the dynamic cache breakpoint to the end of this round's results, so
+        # the next round's call reuses everything up through here from cache.
+        if cached_block is not None:
+            cached_block.pop("cache_control", None)
+        tool_results[-1]["cache_control"] = {"type": "ephemeral"}
+        cached_block = tool_results[-1]
         messages.append({"role": "user", "content": tool_results})
 
     rounds_used = round_num + 1

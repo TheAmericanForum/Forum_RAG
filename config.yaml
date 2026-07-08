@@ -14,6 +14,7 @@ models:
   classify: "claude-haiku-4-5"           # cheap classifier for policy-area labeling
   retrieval_agent: "claude-sonnet-4-6"   # retrieval planner (tool-calling only, speed matters)
   synthesis_agent: "claude-opus-4-8"     # cited answer synthesis (quality matters)
+  synthesis_agent_fallback: "claude-sonnet-5"  # used only if synthesis_agent stays overloaded after retries; set equal to disable
 
 retrieval:
   top_k: 8
