@@ -28,6 +28,20 @@ const brandInitials = document.body.dataset.brandInitials || "SCF";
 
 marked.setOptions({ breaks: true, gfm: true });
 
+// Conversation history sent back to the server with each request so follow-up
+// questions ("what about that?") resolve against prior turns. Capped so a long
+// session doesn't grow the request payload (and prompt cost) without bound —
+// mirrors MAX_HISTORY_EXCHANGES in forum_rag/agent.py.
+const MAX_HISTORY_MESSAGES = 12;
+let history = [];
+
+function pushHistory(role, content) {
+  history.push({ role, content });
+  if (history.length > MAX_HISTORY_MESSAGES) {
+    history = history.slice(-MAX_HISTORY_MESSAGES);
+  }
+}
+
 function renderMarkdown(text) {
   return DOMPurify.sanitize(marked.parse(text || ""));
 }
@@ -211,7 +225,7 @@ async function ask(question, policyArea) {
     const resp = await fetch("/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, policy_area: policyArea || null }),
+      body: JSON.stringify({ question, policy_area: policyArea || null, history }),
     });
     if (resp.status === 401) {
       window.location.href = "/";
@@ -251,6 +265,10 @@ async function ask(question, policyArea) {
           bubbleEl.innerHTML = renderMarkdown(insertFootnotes(raw, citationOccurrences));
           renderSources(sourcesEl, ev.sources);
           scrollToBottom();
+          // Only recorded on success — a failed turn shouldn't pollute the context
+          // given to the next question.
+          pushHistory("user", question);
+          pushHistory("assistant", raw);
         } else if (ev.type === "error") {
           statusEl.innerHTML = `<span class="error-text">Error: ${ev.message}</span>`;
           bubbleEl.classList.remove("streaming");

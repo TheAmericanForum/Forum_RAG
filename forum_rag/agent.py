@@ -72,11 +72,17 @@ SEARCH_TOOL = {
 RETRIEVE_SYSTEM = (
     "You are the retrieval planner for a RAG system over community policy-discussion "
     "transcripts. Your ONLY job right now is to gather evidence: call search_transcripts "
-    "as many times as needed to collect every passage relevant to the user's question, "
-    "within the conversation's policy area — vary your queries by sub-topic, proposal, "
-    "and trade-off, but do not search outside that area. Do NOT write the final answer "
-    "yet. When you have gathered enough, stop calling tools and reply with the single "
-    "word DONE."
+    "as many times as needed to collect every passage relevant to the user's LATEST "
+    "question, within the conversation's policy area — vary your queries by sub-topic, "
+    "proposal, and trade-off, but do not search outside that area. Do NOT write the "
+    "final answer yet. When you have gathered enough, stop calling tools and reply with "
+    "the single word DONE.\n\n"
+    "CONVERSATION CONTEXT\n"
+    "- You may be shown earlier turns of this conversation before the latest question. "
+    "Use them only to resolve references in the latest question (e.g. \"that proposal,\" "
+    "\"the second one,\" \"what about cost?\") into concrete search terms.\n"
+    "- Search for what the latest question needs. Don't re-run searches for ground "
+    "already covered in an earlier turn unless the latest question asks about it again."
 )
 
 SYNTH_SYSTEM = (
@@ -84,6 +90,13 @@ SYNTH_SYSTEM = (
     "transcript excerpts. Center the response on the PROPOSALS raised and the TRADE-OFFS "
     "and concerns discussed, and highlight where there is CONSENSUS and where there is "
     "DISAGREEMENT.\n\n"
+    "CONVERSATION CONTEXT\n"
+    "- You may be shown earlier turns of this conversation before the current question. "
+    "Answer as a natural continuation of that dialogue: resolve pronouns and references "
+    "the way a person following along would, and don't re-explain something already "
+    "covered unless the current question asks for it again.\n"
+    "- Citations are still required for every claim drawn from the excerpts provided in "
+    "THIS turn. Prior answers in the conversation are context, not a source you cite.\n\n"
     "WRITING STYLE\n"
     "- Write in clear, professional, grammatically correct English. The excerpts are "
     "machine-generated transcripts and may contain transcription errors, filler, or "
@@ -116,6 +129,21 @@ SYNTH_SYSTEM = (
 def _cached_system(text: str) -> list[TextBlockParam]:
     """Wrap a system prompt as a single cacheable block."""
     return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
+
+
+# Prior exchanges kept for conversational context, most recent first when trimming.
+# Bounds prompt size/cost on long-running conversations; older turns are dropped since
+# the model only needs enough context to resolve references in the current question.
+MAX_HISTORY_EXCHANGES = 6
+
+
+def _history_messages(history: Optional[list[dict]]) -> list[dict]:
+    """Turn prior conversation turns into plain user/assistant messages, keeping only
+    the most recent MAX_HISTORY_EXCHANGES exchanges."""
+    if not history:
+        return []
+    trimmed = history[-MAX_HISTORY_EXCHANGES * 2 :]
+    return [{"role": turn["role"], "content": turn["content"]} for turn in trimmed]
 
 
 def _fmt_ms(ms: Any) -> str:
@@ -204,8 +232,18 @@ def _run_search(args: dict, gathered: dict[str, dict], *, policy_area: str) -> l
     return brief
 
 
-def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Iterator[dict]:
+def _synthesize(
+    question: str,
+    chunks: list[dict],
+    *,
+    policy_area: str,
+    history_messages: Optional[list[dict]] = None,
+) -> Iterator[dict]:
     """Stream a cited answer over `chunks`; yields token and citation events.
+
+    `history_messages` (already-trimmed prior user/assistant turns, if any) is
+    prepended so the answer reads as a continuation of the conversation rather than
+    a one-off response.
 
     Retried only *before the first event is emitted*: the common failure here is a
     retryable error (e.g. 429/529 overloaded) while establishing the stream, and
@@ -246,6 +284,7 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
             ),
         }
     )
+    messages = [*(history_messages or []), {"role": "user", "content": content}]
 
     # Attempt plan: retry the primary synthesis model, then fall back to a smaller,
     # less capacity-constrained model if it stays overloaded. Fallback is skipped
@@ -265,7 +304,7 @@ def _synthesize(question: str, chunks: list[dict], *, policy_area: str) -> Itera
                 model=model,
                 max_tokens=8000,
                 system=_cached_system(SYNTH_SYSTEM),
-                messages=[{"role": "user", "content": content}],
+                messages=messages,
             ) as stream:
                 for event in stream:
                     if event.type != "content_block_delta":
@@ -361,9 +400,17 @@ def answer(
     session: Optional[str] = None,
     speaker: Optional[str] = None,
     max_rounds: int = 6,
+    history: Optional[list[dict]] = None,
 ) -> Iterator[dict]:
     """Answer a question end to end: plan and run searches (tool-use loop, up to
     `max_rounds`), then stream a cited answer over whatever was found.
+
+    `history` is prior turns of this conversation ({"role": "user"|"assistant",
+    "content": str}, oldest first, not including `question`). It's trimmed to the
+    most recent MAX_HISTORY_EXCHANGES and given to both the retrieval planner (to
+    resolve references like "that" or "the second one" into search terms) and the
+    synthesis step (to keep the answer conversational), so this is a chat, not a
+    string of one-off lookups.
 
     Each round asks the retrieval-planner model to call search_transcripts zero or
     more times; `gathered` accumulates results in a dict keyed by chunk_id so the
@@ -376,8 +423,9 @@ def answer(
     client = _get_client()
     gathered: dict[str, dict] = {}
 
+    history_messages = _history_messages(history)
     base = f"{question}\n\n(Policy area: {policy_area})"
-    messages: list[dict] = [{"role": "user", "content": base}]
+    messages: list[dict] = [*history_messages, {"role": "user", "content": base}]
     any_search_errored = False
     # Tracks the most recently cache-marked message content block so each round's
     # cache breakpoint can be moved forward rather than left to accumulate — the
@@ -454,7 +502,7 @@ def answer(
     yield {"type": "progress", "message": f"Found {len(chunks)} passages. Composing cited answer…"}
 
     collected: dict[int, dict] = {}
-    for ev in _synthesize(question, chunks, policy_area=policy_area):
+    for ev in _synthesize(question, chunks, policy_area=policy_area, history_messages=history_messages):
         if ev["type"] == "citation" and ev["index"] not in collected:
             collected[ev["index"]] = {
                 "cited_text": ev["cited_text"],

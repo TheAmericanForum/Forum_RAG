@@ -9,7 +9,7 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
@@ -56,11 +56,20 @@ templates = Jinja2Templates(directory=str(ROOT / "templates"))
 templates.env.globals["brand"] = get_settings().brand
 
 
+class HistoryTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
 class Query(BaseModel):
     question: str
     policy_area: str
     session: Optional[str] = None
     speaker: Optional[str] = None
+    # Prior turns of this conversation, oldest first, NOT including `question` itself —
+    # lets the agent resolve references like "that" or "the second one" and keep the
+    # answer's tone consistent with what's already been said.
+    history: list[HistoryTurn] = []
 
 
 def _callback_url(request: Request) -> str:
@@ -170,6 +179,7 @@ def query(payload: Query, user: dict = Depends(require_user)):
                 policy_area=payload.policy_area,
                 session=payload.session or None,
                 speaker=payload.speaker or None,
+                history=[turn.model_dump() for turn in payload.history],
             ):
                 yield f"data: {json.dumps(ev)}\n\n"
         except (ConfigError, ExternalServiceError) as e:
