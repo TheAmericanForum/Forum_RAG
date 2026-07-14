@@ -28,17 +28,56 @@ const brandInitials = document.body.dataset.brandInitials || "SCF";
 
 marked.setOptions({ breaks: true, gfm: true });
 
-// Conversation history sent back to the server with each request so follow-up
-// questions ("what about that?") resolve against prior turns. Capped so a long
-// session doesn't grow the request payload (and prompt cost) without bound —
-// mirrors MAX_HISTORY_EXCHANGES in forum_rag/agent.py.
+// Conversation persisted to localStorage (namespaced per user) so it survives a
+// page refresh, and sent back to the server on each request so follow-up questions
+// ("what about that?") resolve against prior turns. Capped so neither the stored
+// payload nor the request payload grows without bound — mirrors
+// MAX_HISTORY_EXCHANGES in forum_rag/agent.py.
 const MAX_HISTORY_MESSAGES = 12;
-let history = [];
+const STORAGE_KEY = `forum_rag_chat_v1:${document.body.dataset.userEmail || "anon"}`;
 
-function pushHistory(role, content) {
-  history.push({ role, content });
-  if (history.length > MAX_HISTORY_MESSAGES) {
-    history = history.slice(-MAX_HISTORY_MESSAGES);
+function loadMessages() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+let messages = loadMessages();
+
+function saveMessages() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch {
+    // Storage full/unavailable (private browsing, quota) — chat still works for
+    // this page load, it just won't survive a refresh.
+  }
+}
+
+// assistantDisplay is the already-footnoted markdown (see insertFootnotes below),
+// stored alongside the plain assistantText so a reload can re-render the exact
+// same bubble without recomputing citation matching.
+function pushMessages(userText, assistantText, assistantDisplay, sources) {
+  messages.push({ role: "user", content: userText });
+  messages.push({ role: "assistant", content: assistantText, displayText: assistantDisplay, sources });
+  if (messages.length > MAX_HISTORY_MESSAGES) {
+    messages = messages.slice(-MAX_HISTORY_MESSAGES);
+  }
+  saveMessages();
+}
+
+function historyForRequest() {
+  return messages.map((m) => ({ role: m.role, content: m.content }));
+}
+
+function clearMessages() {
+  messages = [];
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Best-effort, same as saveMessages().
   }
 }
 
@@ -212,6 +251,25 @@ function renderSources(sourcesEl, sources) {
   });
 }
 
+// Rebuilds the chat UI from whatever was persisted in localStorage, reusing the
+// same render helpers the live-streaming path uses so replayed bubbles are
+// indistinguishable from ones just answered.
+function renderStoredMessages() {
+  if (!messages.length) return;
+  if (emptyState) emptyState.remove();
+  for (const m of messages) {
+    if (m.role === "user") {
+      addUserMessage(m.content);
+    } else {
+      const { bubbleEl, sourcesEl } = addAssistantMessage();
+      bubbleEl.classList.remove("streaming");
+      bubbleEl.innerHTML = renderMarkdown(m.displayText || m.content);
+      renderSources(sourcesEl, m.sources);
+    }
+  }
+}
+renderStoredMessages();
+
 async function ask(question, policyArea) {
   askBtn.disabled = true;
   addUserMessage(question);
@@ -225,7 +283,7 @@ async function ask(question, policyArea) {
     const resp = await fetch("/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, policy_area: policyArea || null, history }),
+      body: JSON.stringify({ question, policy_area: policyArea || null, history: historyForRequest() }),
     });
     if (resp.status === 401) {
       window.location.href = "/";
@@ -262,13 +320,13 @@ async function ask(question, policyArea) {
         } else if (ev.type === "done") {
           statusEl.textContent = "";
           bubbleEl.classList.remove("streaming");
-          bubbleEl.innerHTML = renderMarkdown(insertFootnotes(raw, citationOccurrences));
+          const displayText = insertFootnotes(raw, citationOccurrences);
+          bubbleEl.innerHTML = renderMarkdown(displayText);
           renderSources(sourcesEl, ev.sources);
           scrollToBottom();
           // Only recorded on success — a failed turn shouldn't pollute the context
           // given to the next question.
-          pushHistory("user", question);
-          pushHistory("assistant", raw);
+          pushMessages(question, raw, displayText, ev.sources);
         } else if (ev.type === "error") {
           statusEl.innerHTML = `<span class="error-text">Error: ${ev.message}</span>`;
           bubbleEl.classList.remove("streaming");
@@ -303,4 +361,21 @@ form.addEventListener("submit", (e) => {
   questionEl.value = "";
   autoGrow();
   ask(q, policyEl.value);
+});
+
+document.getElementById("newChatBtn")?.addEventListener("click", () => {
+  clearMessages();
+  chatInner.innerHTML = "";
+  if (emptyState) chatInner.appendChild(emptyState);
+});
+
+// Logging out on a shared machine shouldn't leave this conversation behind for
+// the next person to log in.
+document.querySelector(".logout-link")?.addEventListener("click", () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Best-effort — the key is namespaced by email anyway, so a failure here
+    // just means it'll be overwritten/orphaned rather than actively harmful.
+  }
 });
