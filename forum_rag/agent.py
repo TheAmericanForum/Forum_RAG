@@ -282,9 +282,25 @@ def _synthesize(
                 "(in double quotation marks) and paraphrase everything else in clear, "
                 "professional prose."
             ),
+            # Marks the end of the (retrieved documents + question) prefix as cacheable,
+            # so a same-model retry after a stream failure (see attempt_models below)
+            # reuses this instead of reprocessing potentially large transcript excerpts.
+            "cache_control": {"type": "ephemeral"},
         }
     )
-    messages = [*(history_messages or []), {"role": "user", "content": content}]
+
+    # Local, non-mutating copy: history_messages is shared with the retrieval-planner's
+    # message list in answer(), so we mark a cache breakpoint here without touching the
+    # caller's objects. Caches the growing conversation prefix so a fast follow-up
+    # question in the same chat can reuse it instead of reprocessing prior turns.
+    history_for_synth = list(history_messages or [])
+    if history_for_synth:
+        last = history_for_synth[-1]
+        history_for_synth[-1] = {
+            "role": last["role"],
+            "content": [{"type": "text", "text": last["content"], "cache_control": {"type": "ephemeral"}}],
+        }
+    messages = [*history_for_synth, {"role": "user", "content": content}]
 
     # Attempt plan: retry the primary synthesis model, then fall back to a smaller,
     # less capacity-constrained model if it stays overloaded. Fallback is skipped
@@ -346,6 +362,10 @@ def _synthesize(
                             "index": footnotes[key],
                             "pos": answer_chars,
                         }
+            attempt_kind = "primary" if model == primary else "fallback"
+            log.info(
+                "Synthesis answered by %s (%s, attempt %d/%d)", model, attempt_kind, attempt, max_attempts,
+            )
             return  # stream completed successfully
         except Exception as e:
             # Only re-establish the stream if nothing has been forwarded to the caller

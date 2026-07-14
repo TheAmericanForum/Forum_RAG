@@ -58,19 +58,22 @@ def _classify_one(text: str, area_names: list[str], descriptions: list[str]) -> 
     """Ask the classifier model for the single best-matching policy area."""
     settings = get_settings()
     areas_desc = "\n".join(f"- {n}: {d}" for n, d in zip(area_names, descriptions))
-    prompt = (
+    # Identical across every transcript classified in one ingestion run (get_settings()
+    # is process-cached), so it's split into `system` and cache-marked rather than
+    # concatenated into the per-call user message.
+    system_prompt = (
         "You label a community policy-discussion transcript by the single policy area "
         "it substantively discusses. Every transcript addresses exactly one issue.\n\n"
         f"Policy areas:\n{areas_desc}\n- other: none of the above.\n\n"
         "Return the one area that best matches the whole transcript. Use 'other' only "
-        "if none apply.\n\n"
-        f"Transcript:\n{text}"
+        "if none apply."
     )
     try:
         resp = _get_client().messages.create(
             model=settings.models.classify,
             max_tokens=200,
-            messages=[{"role": "user", "content": prompt}],
+            system=[{"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}}],
+            messages=[{"role": "user", "content": f"Transcript:\n{text}"}],
             output_config={"format": {"type": "json_schema", "schema": _schema(area_names)}},
         )
     except Exception as e:
