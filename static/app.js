@@ -28,17 +28,70 @@ const brandInitials = document.body.dataset.brandInitials || "SCF";
 
 marked.setOptions({ breaks: true, gfm: true });
 
-// Conversation history sent back to the server with each request so follow-up
-// questions ("what about that?") resolve against prior turns. Capped so a long
-// session doesn't grow the request payload (and prompt cost) without bound —
-// mirrors MAX_HISTORY_EXCHANGES in forum_rag/agent.py.
+// Conversation persisted to localStorage (namespaced per user AND per topic, so
+// each Topic keeps its own independent thread) so it survives a page refresh, and
+// sent back to the server on each request so follow-up questions ("what about
+// that?") resolve against prior turns. Capped so neither the stored payload nor
+// the request payload grows without bound — mirrors MAX_HISTORY_EXCHANGES in
+// forum_rag/agent.py.
 const MAX_HISTORY_MESSAGES = 12;
-let history = [];
+const STORAGE_PREFIX = `forum_rag_chat_v1:${document.body.dataset.userEmail || "anon"}:`;
 
-function pushHistory(role, content) {
-  history.push({ role, content });
-  if (history.length > MAX_HISTORY_MESSAGES) {
-    history = history.slice(-MAX_HISTORY_MESSAGES);
+function storageKeyFor(area) {
+  return `${STORAGE_PREFIX}${area}`;
+}
+
+function loadMessages(area) {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(storageKeyFor(area)));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+let currentArea = policyEl.value;
+let messages = loadMessages(currentArea);
+
+function saveMessages(area, msgs) {
+  try {
+    localStorage.setItem(storageKeyFor(area), JSON.stringify(msgs !== undefined ? msgs : messages));
+  } catch {
+    // Storage full/unavailable (private browsing, quota) — chat still works for
+    // this page load, it just won't survive a refresh.
+  }
+}
+
+// assistantDisplay is the already-footnoted markdown (see insertFootnotes below),
+// stored alongside the plain assistantText so a reload can re-render the exact
+// same bubble without recomputing citation matching. `area` is the topic the
+// question was actually submitted under (not necessarily whatever the select
+// shows now — the user may have switched topics while the answer was streaming).
+// If the user has since switched away, we append to that topic's storage
+// directly instead of the live `messages` array, so an in-flight answer for
+// Topic A can't get appended onto Topic B's in-memory history after a switch.
+function pushMessages(area, userText, assistantText, assistantDisplay, sources) {
+  const isCurrent = area === currentArea;
+  let target = isCurrent ? messages : loadMessages(area);
+  target.push({ role: "user", content: userText });
+  target.push({ role: "assistant", content: assistantText, displayText: assistantDisplay, sources });
+  if (target.length > MAX_HISTORY_MESSAGES) {
+    target = target.slice(-MAX_HISTORY_MESSAGES);
+  }
+  if (isCurrent) messages = target;
+  saveMessages(area, target);
+}
+
+function historyForRequest() {
+  return messages.map((m) => ({ role: m.role, content: m.content }));
+}
+
+function clearMessages(area) {
+  messages = [];
+  try {
+    localStorage.removeItem(storageKeyFor(area));
+  } catch {
+    // Best-effort, same as saveMessages().
   }
 }
 
@@ -212,6 +265,30 @@ function renderSources(sourcesEl, sources) {
   });
 }
 
+// Rebuilds the chat UI from whatever's currently in `messages` (either just
+// loaded from localStorage or emptied out), reusing the same render helpers the
+// live-streaming path uses so replayed bubbles are indistinguishable from ones
+// just answered. Used on initial page load, after "New chat", and after
+// switching Topics.
+function renderStoredMessages() {
+  chatInner.innerHTML = "";
+  if (!messages.length) {
+    if (emptyState) chatInner.appendChild(emptyState);
+    return;
+  }
+  for (const m of messages) {
+    if (m.role === "user") {
+      addUserMessage(m.content);
+    } else {
+      const { bubbleEl, sourcesEl } = addAssistantMessage();
+      bubbleEl.classList.remove("streaming");
+      bubbleEl.innerHTML = renderMarkdown(m.displayText || m.content);
+      renderSources(sourcesEl, m.sources);
+    }
+  }
+}
+renderStoredMessages();
+
 async function ask(question, policyArea) {
   askBtn.disabled = true;
   addUserMessage(question);
@@ -225,7 +302,7 @@ async function ask(question, policyArea) {
     const resp = await fetch("/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, policy_area: policyArea || null, history }),
+      body: JSON.stringify({ question, policy_area: policyArea || null, history: historyForRequest() }),
     });
     if (resp.status === 401) {
       window.location.href = "/";
@@ -262,13 +339,13 @@ async function ask(question, policyArea) {
         } else if (ev.type === "done") {
           statusEl.textContent = "";
           bubbleEl.classList.remove("streaming");
-          bubbleEl.innerHTML = renderMarkdown(insertFootnotes(raw, citationOccurrences));
+          const displayText = insertFootnotes(raw, citationOccurrences);
+          bubbleEl.innerHTML = renderMarkdown(displayText);
           renderSources(sourcesEl, ev.sources);
           scrollToBottom();
           // Only recorded on success — a failed turn shouldn't pollute the context
           // given to the next question.
-          pushHistory("user", question);
-          pushHistory("assistant", raw);
+          pushMessages(policyArea, question, raw, displayText, ev.sources);
         } else if (ev.type === "error") {
           statusEl.innerHTML = `<span class="error-text">Error: ${ev.message}</span>`;
           bubbleEl.classList.remove("streaming");
@@ -303,4 +380,34 @@ form.addEventListener("submit", (e) => {
   questionEl.value = "";
   autoGrow();
   ask(q, policyEl.value);
+});
+
+document.getElementById("newChatBtn")?.addEventListener("click", () => {
+  if (!window.confirm("Start a new chat? Your current conversation for this topic will be deleted.")) {
+    return;
+  }
+  clearMessages(currentArea);
+  renderStoredMessages();
+});
+
+// Each Topic keeps its own independent conversation — switching the selector
+// saves nothing extra (turns are already persisted as they happen) but swaps
+// which topic's history is loaded and shown.
+policyEl.addEventListener("change", () => {
+  currentArea = policyEl.value;
+  messages = loadMessages(currentArea);
+  renderStoredMessages();
+});
+
+// Logging out on a shared machine shouldn't leave any topic's conversation behind
+// for the next person to log in.
+document.querySelector(".logout-link")?.addEventListener("click", () => {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(STORAGE_PREFIX)) localStorage.removeItem(key);
+    }
+  } catch {
+    // Best-effort — the keys are namespaced by email anyway, so a failure here
+    // just means they'll be overwritten/orphaned rather than actively harmful.
+  }
 });

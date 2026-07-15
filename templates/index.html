@@ -32,10 +32,11 @@
     })();
   </script>
 </head>
-<body data-brand-initials="{{ brand.initials }}">
+<body data-brand-initials="{{ brand.initials }}" data-user-email="{{ user.email }}">
   <header class="app-header">
     {% include "_brand.html" %}
     <div class="user-menu">
+      <button id="newChatBtn" class="new-chat-btn" type="button">New chat</button>
       <span class="user-email">{{ user.email }}</span>
       <a class="logout-link" href="/auth/logout">Log out</a>
       <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">

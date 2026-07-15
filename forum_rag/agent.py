@@ -87,7 +87,8 @@ RETRIEVE_SYSTEM = (
 
 SYNTH_SYSTEM = (
     "You answer questions about community policy discussions using ONLY the provided "
-    "transcript excerpts. Center the response on the PROPOSALS raised and the TRADE-OFFS "
+    "transcript excerpts. Never assert a fact without having a quotaion or citaion to back it up."
+    "Center the response on the PROPOSALS raised and the TRADE-OFFS "
     "and concerns discussed, and highlight where there is CONSENSUS and where there is "
     "DISAGREEMENT.\n\n"
     "CONVERSATION CONTEXT\n"

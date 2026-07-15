@@ -92,8 +92,9 @@ python ingest_data.py --source local:./data
 # Ask via CLI:
 python main.py --show-progress "What trade-offs were raised about <area>?"
 
-# Or run the web UI:
-      # open http://127.0.0.1:5050
+# Or run the web UI (port 5050, matching the Google OAuth redirect URI):
+uvicorn app:app --reload --port 5050
+# open http://127.0.0.1:5050
 ```
 
 `--source drive` ingests from Google Drive instead (needs `GOOGLE_SERVICE_ACCOUNT_JSON` +
