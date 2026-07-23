@@ -23,7 +23,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from forum_rag import store
 from forum_rag.agent import answer
 from forum_rag.auth import build_flow, get_current_user, is_allowed_email, require_user, verify_id_token
-from forum_rag.config import BRANDING_DIR, TENANT, get_settings
+from forum_rag.config import BRANDING_DIR, TENANT, get_settings, is_production
 from forum_rag.errors import ConfigError, ExternalServiceError
 
 log = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=get_settings().require_session_secret(),
     same_site="lax",
-    https_only=bool(get_settings().qdrant_url),
+    https_only=is_production(),
 )
 app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
 # Per-tenant branding assets (logo-mark.svg, favicon.svg, theme.css) served at /brand.
