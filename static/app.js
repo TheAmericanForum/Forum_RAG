@@ -204,6 +204,15 @@ function snapToSentenceEnd(text, from) {
   return m ? m.index + m[0].length : text.length;
 }
 
+// Builds the permanent, shareable link for a citation: /source/<citation_id>, with the
+// exact cited excerpt carried as ?q= so the source page can highlight it. Returns null
+// when there's no permanent id to link to (chunk predates citation_id backfill).
+function sourceUrl(citationId, citedText) {
+  if (!citationId) return null;
+  const q = citedText ? `?q=${encodeURIComponent(citedText)}` : "";
+  return `/source/${citationId}${q}`;
+}
+
 // Place a footnote marker for each citation. Prefer the precise spot right after a
 // verbatim quote of the cited passage; for paraphrased claims (no verbatim span in the
 // answer) fall back to the streamed position, snapped to the enclosing sentence's end.
@@ -221,7 +230,9 @@ function insertFootnotes(text, occurrences) {
       end = snapToSentenceEnd(text, Math.max(cursor, occ.pos));
     }
     if (end === lastEnd && occ.index === lastIndex) continue; // duplicate on same span
-    result += text.slice(cursor, end) + `[[${occ.index}]](#cite-${occ.index})`;
+    const url = sourceUrl(occ.source?.citation_id, occ.cited_text);
+    const marker = url ? `[[${occ.index}]](${url})` : `[${occ.index}]`;
+    result += text.slice(cursor, end) + marker;
     cursor = end;
     lastEnd = end;
     lastIndex = occ.index;
@@ -244,15 +255,15 @@ function renderSources(sourcesEl, sources) {
     const loc = [src.session, table, src.date].filter(Boolean).join(" · ");
     const div = document.createElement("div");
     div.className = "source-card";
-    div.id = `cite-${s.index}`;
     div.innerHTML = `<div class="loc"></div><div class="quote"></div>`;
     const locText =
       `[${s.index}] ${loc} · ${speakers} · ${src.time || ""} ` +
       `(turns ${src.turn_start}-${src.turn_end})`;
     const locEl = div.querySelector(".loc");
-    if (src.citation_id) {
+    const url = sourceUrl(src.citation_id, s.cited_text);
+    if (url) {
       const a = document.createElement("a");
-      a.href = `/source/${src.citation_id}`;
+      a.href = url;
       a.target = "_blank";
       a.rel = "noopener";
       a.textContent = locText;
@@ -262,6 +273,17 @@ function renderSources(sourcesEl, sources) {
     }
     div.querySelector(".quote").textContent = `"${s.cited_text || ""}"`;
     sourcesEl.appendChild(div);
+  });
+}
+
+// In-text citation markers become plain markdown links (see insertFootnotes), so they
+// lose the target="_blank" the footnote cards get via direct DOM construction — set it
+// here after rendering so clicking a citation opens the permalink without navigating the
+// chat away.
+function openSourceLinksInNewTab(container) {
+  container.querySelectorAll('a[href^="/source/"]').forEach((a) => {
+    a.target = "_blank";
+    a.rel = "noopener";
   });
 }
 
@@ -283,6 +305,7 @@ function renderStoredMessages() {
       const { bubbleEl, sourcesEl } = addAssistantMessage();
       bubbleEl.classList.remove("streaming");
       bubbleEl.innerHTML = renderMarkdown(m.displayText || m.content);
+      openSourceLinksInNewTab(bubbleEl);
       renderSources(sourcesEl, m.sources);
     }
   }
@@ -335,12 +358,14 @@ async function ask(question, policyArea) {
             index: ev.index,
             cited_text: ev.cited_text,
             pos: ev.pos,
+            source: ev.source,
           });
         } else if (ev.type === "done") {
           statusEl.textContent = "";
           bubbleEl.classList.remove("streaming");
           const displayText = insertFootnotes(raw, citationOccurrences);
           bubbleEl.innerHTML = renderMarkdown(displayText);
+          openSourceLinksInNewTab(bubbleEl);
           renderSources(sourcesEl, ev.sources);
           scrollToBottom();
           // Only recorded on success — a failed turn shouldn't pollute the context
