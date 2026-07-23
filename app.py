@@ -25,6 +25,7 @@ from forum_rag.agent import answer
 from forum_rag.auth import build_flow, get_current_user, is_allowed_email, require_user, verify_id_token
 from forum_rag.config import BRANDING_DIR, TENANT, get_settings, is_production
 from forum_rag.errors import ConfigError, ExternalServiceError
+from forum_rag.sources import reconcile_sources
 
 log = logging.getLogger(__name__)
 
@@ -195,6 +196,17 @@ def source(request: Request, citation_id: str, q: Optional[str] = None):
     return templates.TemplateResponse(
         request, "source.html", {"source": chunk, "user": user, "highlighted_text": highlighted_text}
     )
+
+
+@app.get("/sources")
+def sources(user: dict = Depends(require_user)):
+    """Reconcile Qdrant's indexed transcripts against the live Google Drive listing,
+    for the Sources tab. Flags files that are missing, stale, or orphaned."""
+    try:
+        return reconcile_sources()
+    except (ConfigError, ExternalServiceError) as e:
+        log.error("Source reconciliation failed: %s", e)
+        raise HTTPException(status_code=503, detail=str(e)) from e
 
 
 @app.post("/query")

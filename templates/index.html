@@ -33,45 +33,76 @@
   </script>
 </head>
 <body data-brand-initials="{{ brand.initials }}" data-user-email="{{ user.email }}">
-  <header class="app-header">
-    {% include "_brand.html" %}
-    <div class="user-menu">
-      <button id="newChatBtn" class="new-chat-btn" type="button">New chat</button>
-      <span class="user-email">{{ user.email }}</span>
-      <a class="logout-link" href="/auth/logout">Log out</a>
-      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
-        <span class="theme-toggle-icon" aria-hidden="true"></span>
-      </button>
-    </div>
-  </header>
+  <nav class="side-rail" aria-label="Views">
+    <button id="navChat" class="rail-btn active" type="button" aria-pressed="true" title="Chat">
+      <span class="rail-icon" aria-hidden="true">&#128172;</span>
+      <span class="rail-label">Chat</span>
+    </button>
+    <button id="navSources" class="rail-btn" type="button" aria-pressed="false" title="Sources">
+      <span class="rail-icon" aria-hidden="true">&#128193;</span>
+      <span class="rail-label">Sources</span>
+    </button>
+  </nav>
 
-  <main class="chat-scroll" id="chatScroll">
-    <div class="chat-inner" id="chatInner">
-      <div class="empty-state" id="emptyState">
-        <div class="empty-title">{{ brand.app_name }}</div>
-        <p>Ask about the proposals and trade-offs raised across the policy areas. Answers cite the exact transcript passages — speaker, table, and timestamp.</p>
+  <div class="app-main">
+    <header class="app-header">
+      {% include "_brand.html" %}
+      <div class="user-menu">
+        <button id="newChatBtn" class="new-chat-btn" type="button">New chat</button>
+        <span class="user-email">{{ user.email }}</span>
+        <a class="logout-link" href="/auth/logout">Log out</a>
+        <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
       </div>
-    </div>
-  </main>
+    </header>
 
-  <div class="composer-wrap">
-    <div class="composer">
-      <form id="form">
-        <div class="composer-topbar">
-          <label for="policy_area" class="topic-label">Topic</label>
-          <select id="policy_area" class="filter-select" required>
-            {% for area in policy_areas %}<option value="{{ area }}">{{ area }}</option>{% endfor %}
-          </select>
+    <section class="view" id="chatView">
+      <main class="chat-scroll" id="chatScroll">
+        <div class="chat-inner" id="chatInner">
+          <div class="empty-state" id="emptyState">
+            <div class="empty-title">{{ brand.app_name }}</div>
+            <p>Ask about the proposals and trade-offs raised across the policy areas. Answers cite the exact transcript passages — speaker, table, and timestamp.</p>
+          </div>
         </div>
-        <div class="composer-row">
-          <textarea id="question" rows="1" placeholder="Ask the Forum…" required></textarea>
-          <button id="ask" class="send" type="submit" aria-label="Send">&#8593;</button>
+      </main>
+
+      <div class="composer-wrap">
+        <div class="composer">
+          <form id="form">
+            <div class="composer-topbar">
+              <label for="policy_area" class="topic-label">Topic</label>
+              <select id="policy_area" class="filter-select" required>
+                {% for area in policy_areas %}<option value="{{ area }}">{{ area }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="composer-row">
+              <textarea id="question" rows="1" placeholder="Ask the Forum…" required></textarea>
+              <button id="ask" class="send" type="submit" aria-label="Send">&#8593;</button>
+            </div>
+          </form>
+          <p class="hint">This knowledge base is built from information gathered through The Forum's in-person and online community engagement activities. It is intended to support The Forum's civic engagement programming and AI-generated responses serve as a starting point rather than a definitive source. The Forum's state teams review all outputs before they are used for program implementation.</p>
         </div>
-      </form>
-      <p class="hint">This knowledge base is built from information gathered through The Forum's in-person and online community engagement activities. It is intended to support The Forum's civic engagement programming and AI-generated responses serve as a starting point rather than a definitive source. The Forum's state teams review all outputs before they are used for program implementation.</p>
-    </div>
+      </div>
+    </section>
+
+    <section class="view" id="sourcesView" hidden>
+      <div class="sources-scroll">
+        <div class="sources-inner">
+          <div class="sources-header">
+            <h1>Sources</h1>
+            <button id="sourcesRefresh" class="refresh-btn" type="button">Refresh</button>
+          </div>
+          <p class="hint">Every transcript found in Google Drive, cross-checked against what's indexed in Qdrant.</p>
+          <div id="sourcesSummary" class="sources-summary"></div>
+          <div id="sourcesStatus" class="sources-status"></div>
+          <div id="sourcesTableWrap" class="sources-table-wrap"></div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="/static/app.js"></script>
+  <script src="/static/sources.js"></script>
 </body>
 </html>
