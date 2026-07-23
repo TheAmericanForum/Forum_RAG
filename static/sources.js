@@ -14,8 +14,6 @@ const STATUS_LABEL = {
   synced: "Synced",
   stale: "Stale",
   missing: "Missing",
-  orphaned: "Orphaned",
-  local: "Local",
 };
 
 let sourcesLoaded = false;
@@ -55,7 +53,7 @@ function renderTable(rows) {
   table.className = "sources-table";
   table.innerHTML =
     "<thead><tr>" +
-    "<th>Status</th><th>Name</th><th>Session</th><th>Chunks</th><th>Modified</th>" +
+    "<th>Status</th><th>Name</th><th>Session</th><th>Chunks</th><th>Modified</th><th>Drive</th>" +
     "</tr></thead>";
   const tbody = document.createElement("tbody");
   for (const row of rows) {
@@ -81,7 +79,17 @@ function renderTable(rows) {
     const modifiedTd = document.createElement("td");
     modifiedTd.textContent = row.modified_time ? row.modified_time.slice(0, 10) : "";
 
-    tr.append(statusTd, nameTd, locationTd, chunksTd, modifiedTd);
+    const driveTd = document.createElement("td");
+    if (row.drive_url) {
+      const a = document.createElement("a");
+      a.href = row.drive_url;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "Open ↗";
+      driveTd.appendChild(a);
+    }
+
+    tr.append(statusTd, nameTd, locationTd, chunksTd, modifiedTd, driveTd);
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);

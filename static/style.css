@@ -739,8 +739,6 @@ body {
 .status-synced { color: var(--accent); border-color: var(--accent); }
 .status-stale { color: var(--state-gold); border-color: var(--state-gold); }
 .status-missing { color: var(--state-maroon); border-color: var(--state-maroon); }
-.status-orphaned { color: var(--muted); border-color: var(--line); }
-.status-local { color: var(--accent-secondary); border-color: var(--accent-secondary); }
 
 .sources-table-wrap {
   overflow-x: auto;

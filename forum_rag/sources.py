@@ -13,7 +13,9 @@ from typing import Any
 from . import drive, store
 
 # Sort/priority order for rows: problems first, so they're what you see without scrolling.
-_STATUS_ORDER = ["missing", "stale", "orphaned", "synced", "local"]
+_STATUS_ORDER = ["missing", "stale", "synced"]
+
+_DRIVE_FILE_URL = "https://drive.google.com/file/d/{}/view"
 
 _FIELDS = ["drive_file_id", "transcript_id", "source_file", "session", "table", "date", "policy_areas", "source_md5"]
 
@@ -66,17 +68,16 @@ def reconcile_sources() -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
 
     for drive_file_id, record in qdrant_by_file.items():
-        if drive_file_id.startswith("local:"):
-            status = "local"
-            drive_file = None
+        is_local = drive_file_id.startswith("local:")
+        drive_file = None if is_local else drive_by_id.get(drive_file_id)
+        # A missing Drive match (moved/renamed/deleted upstream since ingest) and a
+        # dev-only local: ingest both just mean "no live Drive file to compare
+        # against" — neither is a problem worth a distinct status, so both count as
+        # synced (it's indexed, and there's nothing further to check it against).
+        if drive_file is not None and drive_file.md5 and drive_file.md5 != record["source_md5"]:
+            status = "stale"
         else:
-            drive_file = drive_by_id.get(drive_file_id)
-            if drive_file is None:
-                status = "orphaned"
-            elif drive_file.md5 and drive_file.md5 != record["source_md5"]:
-                status = "stale"
-            else:
-                status = "synced"
+            status = "synced"
         rows.append(
             {
                 "drive_file_id": drive_file_id,
@@ -88,6 +89,7 @@ def reconcile_sources() -> dict[str, Any]:
                 "chunks": record["chunks"],
                 "policy_areas": sorted(record["policy_areas"]),
                 "modified_time": drive_file.modified_time if drive_file else None,
+                "drive_url": None if is_local else _DRIVE_FILE_URL.format(drive_file_id),
             }
         )
 
@@ -105,6 +107,7 @@ def reconcile_sources() -> dict[str, Any]:
                 "chunks": 0,
                 "policy_areas": [],
                 "modified_time": drive_file.modified_time,
+                "drive_url": _DRIVE_FILE_URL.format(drive_file.id),
             }
         )
 
