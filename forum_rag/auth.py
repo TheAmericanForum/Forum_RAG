@@ -16,7 +16,7 @@ from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2 import id_token as google_id_token
 from google_auth_oauthlib.flow import Flow
 
-from .config import get_settings
+from .config import get_settings, is_production
 
 log = logging.getLogger(__name__)
 
@@ -58,13 +58,14 @@ def _get_allowed_emails() -> list[str]:
             _emails_cache = settings.allowed_emails
     return _emails_cache
 
-# oauthlib refuses to complete a token exchange over plain HTTP. QDRANT_URL is only
-# set in production (Heroku, behind HTTPS); its absence means we're running local dev
-# over http://localhost, where this check needs to be disabled.
+# oauthlib refuses to complete a token exchange over plain HTTP. We're only ever
+# actually served over HTTPS in production (Heroku); local dev always runs over
+# http://localhost regardless of which Qdrant instance it points at, so this check
+# needs to be disabled there.
 # NOTE: this runs at import time (mutating process-wide os.environ as a side effect
 # of importing this module), so it must happen before google-auth-oauthlib's first
 # token exchange — import order matters here.
-if not get_settings().qdrant_url:
+if not is_production():
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 AUTH_URI = "https://accounts.google.com/o/oauth2/auth"

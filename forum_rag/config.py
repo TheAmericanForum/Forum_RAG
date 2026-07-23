@@ -28,6 +28,13 @@ CONFIG_PATH = ROOT / "config.yaml"
 TENANT = os.getenv("TENANT", "sc")
 BRANDING_DIR = ROOT / "branding"
 
+# Heroku sets DYNO on every dyno process and never locally, so it's a reliable
+# "are we actually served over HTTPS in production" signal — independent of which
+# Qdrant instance we happen to point at (local dev can point at the remote/hosted
+# Qdrant via QDRANT_URL while still running the web app itself over plain http).
+def is_production() -> bool:
+    return bool(os.getenv("DYNO"))
+
 
 class PolicyArea(BaseModel):
     name: str

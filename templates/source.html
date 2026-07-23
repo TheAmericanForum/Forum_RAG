@@ -38,8 +38,11 @@
         · {{ (source.speakers or []) | join(", ") }}
         · turns {{ source.turn_start }}-{{ source.turn_end }}
       </div>
-      <div class="quote source-transcript">{{ source.text }}</div>
+      <div class="quote source-transcript">{{ highlighted_text }}</div>
     </div>
   </main>
+  <script>
+    document.getElementById("cited-span")?.scrollIntoView({ block: "center" });
+  </script>
 </body>
 </html>

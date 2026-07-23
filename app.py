@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal, Optional
@@ -15,13 +16,14 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup, escape
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from forum_rag import store
 from forum_rag.agent import answer
 from forum_rag.auth import build_flow, get_current_user, is_allowed_email, require_user, verify_id_token
-from forum_rag.config import BRANDING_DIR, TENANT, get_settings
+from forum_rag.config import BRANDING_DIR, TENANT, get_settings, is_production
 from forum_rag.errors import ConfigError, ExternalServiceError
 
 log = logging.getLogger(__name__)
@@ -46,7 +48,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=get_settings().require_session_secret(),
     same_site="lax",
-    https_only=bool(get_settings().qdrant_url),
+    https_only=is_production(),
 )
 app.mount("/static", StaticFiles(directory=str(ROOT / "static")), name="static")
 # Per-tenant branding assets (logo-mark.svg, favicon.svg, theme.css) served at /brand.
@@ -154,9 +156,31 @@ def health():
     return {"ok": True}
 
 
+def _highlight_passage(text: str, query: Optional[str]) -> Markup:
+    """Wrap the exact cited span within the full chunk text in <mark>, tolerating
+    whitespace-run differences. The citation is an exact quote from `text` (Anthropic's
+    citations API only ever quotes verbatim spans), so a straight substring search is
+    enough here — unlike the paraphrase-tolerant matching in static/app.js, which matches
+    a citation against the model's own prose rather than against its source."""
+    if not query or not query.strip():
+        return Markup(escape(text))
+    tokens = query.strip().split()
+    pattern = r"\s+".join(re.escape(t) for t in tokens)
+    m = re.search(pattern, text)
+    if not m:
+        return Markup(escape(text))
+    start, end = m.span()
+    return Markup(
+        f"{escape(text[:start])}"
+        f'<mark id="cited-span">{escape(text[start:end])}</mark>'
+        f"{escape(text[end:])}"
+    )
+
+
 @app.get("/source/{citation_id}", response_class=HTMLResponse)
-def source(request: Request, citation_id: str):
-    """Render the full passage a citation permalink (/source/<citation_id>) points to."""
+def source(request: Request, citation_id: str, q: Optional[str] = None):
+    """Render the full passage a citation permalink (/source/<citation_id>) points to,
+    highlighting the exact excerpt `q` (the cited_text) was quoted from, if given."""
     user = get_current_user(request)
     if user is None:
         return templates.TemplateResponse(request, "login.html", {})
@@ -167,7 +191,10 @@ def source(request: Request, citation_id: str):
         raise HTTPException(status_code=503, detail="Source lookup temporarily unavailable") from e
     if chunk is None:
         raise HTTPException(status_code=404, detail="Source not found")
-    return templates.TemplateResponse(request, "source.html", {"source": chunk, "user": user})
+    highlighted_text = _highlight_passage(chunk.get("text") or "", q)
+    return templates.TemplateResponse(
+        request, "source.html", {"source": chunk, "user": user, "highlighted_text": highlighted_text}
+    )
 
 
 @app.post("/query")

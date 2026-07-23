@@ -459,11 +459,6 @@ body {
   color: var(--fg-body);
 }
 
-.source-card:target {
-  border-left-color: var(--state-maroon);
-  background: var(--bg);
-}
-
 .source-page {
   max-width: 760px;
   margin: 0 auto;
@@ -498,7 +493,14 @@ body {
   line-height: 1.6;
 }
 
-.bubble.markdown a[href^="#cite-"] {
+.source-transcript mark {
+  background: var(--accent-secondary);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.bubble.markdown a[href^="/source/"] {
   font-size: .75em;
   font-weight: 600;
   vertical-align: super;
