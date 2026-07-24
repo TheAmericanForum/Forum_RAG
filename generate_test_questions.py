@@ -6,12 +6,16 @@ classify.py uses for structured output) to write one narrow, specific question w
 answer requires that transcript's content in particular — grounded in one real chunk,
 not a generic topic question many transcripts could equally answer.
 
-Incremental by default: transcript_ids already in the fixture are left untouched, so
-re-running after a fresh ingest only costs a call per *new* transcript. Pass
---regenerate to rebuild everything from scratch.
+Incremental by default: a fixture row is left untouched as long as its transcript's
+source_md5 (stamped on every chunk by ingest_data.py, changes only on re-ingest) still
+matches what's currently in Qdrant. Re-running only costs a call per *new or
+re-ingested* transcript — a transcript whose chunking/classification drifted (e.g. the
+Drive file was edited and re-ingested) gets its question, policy_area, and
+expected_chunk_id refreshed automatically instead of silently going stale. Pass
+--regenerate to rebuild everything from scratch regardless of source_md5.
 
 Usage:
-  python generate_test_questions.py                # add questions for new transcripts only
+  python generate_test_questions.py                # add/refresh new or stale transcripts only
   python generate_test_questions.py --regenerate    # rebuild the whole fixture
   python generate_test_questions.py --limit 20      # cap how many transcripts to process this run
 """
@@ -67,7 +71,17 @@ def _pick_representative_chunk(chunks: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _group_by_transcript() -> dict[str, list[dict[str, Any]]]:
-    fields = ["transcript_id", "chunk_id", "text", "session", "table", "date", "drive_file_id", "policy_areas"]
+    fields = [
+        "transcript_id",
+        "chunk_id",
+        "text",
+        "session",
+        "table",
+        "date",
+        "drive_file_id",
+        "policy_areas",
+        "source_md5",
+    ]
     by_transcript: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for point in store.iter_all_points(with_payload=fields):
         payload = point.payload or {}
@@ -121,11 +135,25 @@ def main() -> None:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
-    todo = [tid for tid in by_transcript if tid not in existing]
+    def _is_stale(transcript_id: str) -> bool:
+        row = existing.get(transcript_id)
+        if row is None:
+            return True
+        current_md5 = _pick_representative_chunk(by_transcript[transcript_id]).get("source_md5")
+        # A row from before source_md5 was tracked has no baseline to compare against —
+        # treat it as stale once so it picks one up, rather than trusting it forever.
+        return row.get("source_md5") != current_md5
+
+    todo = [tid for tid in by_transcript if _is_stale(tid)]
     if args.limit is not None:
         todo = todo[: args.limit]
 
-    print(f"{len(existing)} question(s) already in fixture, generating {len(todo)} new one(s)...")
+    new_count = sum(1 for tid in todo if tid not in existing)
+    stale_count = len(todo) - new_count
+    print(
+        f"{len(existing)} question(s) in fixture, {len(todo)} to (re)generate "
+        f"({new_count} new, {stale_count} stale)..."
+    )
 
     for i, transcript_id in enumerate(todo, 1):
         chunks = by_transcript[transcript_id]
@@ -148,6 +176,7 @@ def main() -> None:
             "policy_area": policy_areas[0],
             "question": question,
             "expected_chunk_id": chunk.get("chunk_id"),
+            "source_md5": chunk.get("source_md5"),
         }
         print(f"  [{i}/{len(todo)}] {transcript_id}: {question}")
 
