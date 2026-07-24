@@ -11,9 +11,12 @@
 #
 # Scheduled to run after ingest-sc.yml (08:10 UTC) so it's checking that day's data.
 #
-# tests/fixtures/test_questions.json is gitignored (derived from private transcript
-# content) but expensive to regenerate from scratch every run, so it's persisted
-# across runs via actions/cache and only regenerated incrementally for new transcripts.
+# tests/fixtures/test_questions.<collection>.json is committed to git and is the durable
+# cache of generated questions. Each row is keyed to its transcript's source_md5, so a
+# question is regenerated only when that transcript is new or has been re-ingested (see
+# generate_test_questions.py). The "Persist regenerated questions" step below commits any
+# such additions back, so the next run reuses them instead of paying to regenerate — and
+# the first run for a tenant bootstraps its fixture the same way.
 #
 # The full end-to-end agent layer (tests/test_retrieval_agent.py, real Anthropic
 # retrieval-planner + synthesis calls) is intentionally NOT run here — trigger it
@@ -36,6 +39,8 @@ concurrency:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # push the refreshed test-question fixture back to the branch
     timeout-minutes: 30
     env:
       TENANT: sc
@@ -53,14 +58,36 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -r requirements.txt
-      - name: Restore cached test-question fixture
-        uses: actions/cache@v4
-        with:
-          path: tests/fixtures/
-          key: test-questions-sc-${{ github.run_id }}
-          restore-keys: |
-            test-questions-sc-
-      - name: Generate test questions for any new transcripts
+      - name: Generate questions for any new or re-ingested transcripts
         run: python generate_test_questions.py
       - name: Run integrity + retrieval-recall tests
         run: pytest tests/ -v
+      - name: Persist regenerated questions back to git
+        if: always() # persist even if the tests above failed; never block on a push race
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          FIXTURE="tests/fixtures/test_questions.${QDRANT_COLLECTION}.json"
+          # --porcelain catches a brand-new (untracked) fixture too, which `git diff` would miss.
+          if [ -z "$(git status --porcelain -- "$FIXTURE")" ]; then
+            echo "No fixture changes to persist."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$FIXTURE"
+          git commit -m "chore(audit): cache generated test questions for ${QDRANT_COLLECTION} [skip ci]"
+          # Rebase-retry so a concurrent tenant audit committing its own fixture can't lose this one.
+          for attempt in 1 2 3; do
+            if git fetch origin "$GITHUB_REF_NAME" \
+               && git rebase "origin/$GITHUB_REF_NAME" \
+               && git push origin "HEAD:$GITHUB_REF_NAME"; then
+              echo "Persisted fixture update."
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "Attempt $attempt failed (likely a push race); retrying..."
+            sleep $((RANDOM % 8 + 3))
+          done
+          echo "Could not persist fixture update after 3 attempts (will regenerate next run)." >&2
+          exit 1
