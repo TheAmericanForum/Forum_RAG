@@ -1,0 +1,64 @@
+# On-demand full agent retrieval test for the Nevada Forum (TENANT=nv).
+#
+# Runs tests/test_retrieval_agent.py: the REAL forum_rag.agent.answer() pipeline
+# (Sonnet retrieval planner + Opus synthesis) against a realistic, transcript-grounded
+# question for every transcript in nv_chunks, asserting the expected transcript
+# actually gets cited. This is the layer most likely to reproduce "the agent didn't
+# pull from a relevant transcript" — see audit-nv.yml for the cheaper nightly layer
+# that only checks the vector-search step in isolation.
+#
+# workflow_dispatch ONLY — no schedule trigger. This costs real Anthropic tokens per
+# transcript (up to 6 retrieval-planner rounds + a synthesis call, per case), so it
+# runs only when someone explicitly triggers it from the Actions tab, not on a cron.
+#
+# Optional input `pytest_extra_args` lets you scope a run down for cost, e.g.
+# "-k some-session-name" to test only matching transcripts.
+#
+# Required GitHub secrets: same as ingest-nv.yml/audit-nv.yml (QDRANT_URL,
+# QDRANT_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_SERVICE_ACCOUNT_JSON,
+# DRIVE_FOLDER_IDS_NV)
+name: E2E agent test - NV transcripts
+
+on:
+  workflow_dispatch:
+    inputs:
+      pytest_extra_args:
+        description: 'Extra pytest args to scope the run down, e.g. "-k some-session" (optional)'
+        required: false
+        default: ""
+
+concurrency:
+  group: e2e-nv
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TENANT: nv
+      QDRANT_COLLECTION: nv_chunks
+      QDRANT_URL: ${{ secrets.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      DRIVE_FOLDER_IDS: ${{ secrets.DRIVE_FOLDER_IDS_NV }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore cached test-question fixture
+        uses: actions/cache@v4
+        with:
+          path: tests/fixtures/
+          key: test-questions-nv-${{ github.run_id }}
+          restore-keys: |
+            test-questions-nv-
+      - name: Generate test questions for any new transcripts
+        run: python generate_test_questions.py
+      - name: Run full agent e2e retrieval test
+        run: pytest -m e2e tests/test_retrieval_agent.py -v ${{ inputs.pytest_extra_args }}

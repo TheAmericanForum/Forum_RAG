@@ -1,0 +1,66 @@
+# Nightly data-integrity audit for the New Hampshire Forum (TENANT=nh).
+#
+# Runs the cheap layers of the test suite (tests/, minus the @pytest.mark.e2e full-agent
+# layer — see pytest.ini) against the nh_chunks Qdrant collection: (a) every Drive
+# transcript parses cleanly, (b) every Drive transcript is indexed and up to date
+# (file-level, via forum_rag.sources.reconcile_sources) and has no turn-coverage gaps
+# (chunk-level, via forum_rag.integrity.audit_chunk_coverage), (c) a realistic,
+# transcript-grounded question actually retrieves that transcript via plain vector
+# search (no Anthropic cost). A failing run shows red in the Actions tab, same as an
+# ingest failure would.
+#
+# Scheduled to run after ingest-nh.yml (08:25 UTC) so it's checking that day's data.
+#
+# tests/fixtures/test_questions.json is gitignored (derived from private transcript
+# content) but expensive to regenerate from scratch every run, so it's persisted
+# across runs via actions/cache and only regenerated incrementally for new transcripts.
+#
+# The full end-to-end agent layer (tests/test_retrieval_agent.py, real Anthropic
+# retrieval-planner + synthesis calls) is intentionally NOT run here — trigger it
+# on demand instead via the "E2E agent test - NH transcripts" workflow (e2e-nh.yml,
+# workflow_dispatch only, no schedule).
+#
+# Required GitHub secrets: same as ingest-nh.yml (QDRANT_URL, QDRANT_API_KEY,
+# OPENAI_API_KEY, ANTHROPIC_API_KEY, GOOGLE_SERVICE_ACCOUNT_JSON, DRIVE_FOLDER_IDS_NH)
+name: Audit NH transcripts
+
+on:
+  schedule:
+    - cron: "25 9 * * *" # daily 09:25 UTC (1h after ingest-nh)
+  workflow_dispatch: {}
+
+concurrency:
+  group: audit-nh
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TENANT: nh
+      QDRANT_COLLECTION: nh_chunks
+      QDRANT_URL: ${{ secrets.QDRANT_URL }}
+      QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      DRIVE_FOLDER_IDS: ${{ secrets.DRIVE_FOLDER_IDS_NH }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore cached test-question fixture
+        uses: actions/cache@v4
+        with:
+          path: tests/fixtures/
+          key: test-questions-nh-${{ github.run_id }}
+          restore-keys: |
+            test-questions-nh-
+      - name: Generate test questions for any new transcripts
+        run: python generate_test_questions.py
+      - name: Run integrity + retrieval-recall tests
+        run: pytest tests/ -v

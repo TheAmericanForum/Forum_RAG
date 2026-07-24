@@ -14,3 +14,4 @@ pydantic
 pyyaml
 rich
 tenacity
+pytest
