@@ -5,6 +5,7 @@ retrieval so the first byte reaches Heroku's router well under its 30s limit.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -57,6 +58,26 @@ app.mount("/brand", StaticFiles(directory=str(BRANDING_DIR / TENANT)), name="bra
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
 # Expose brand text to every template without threading it through each handler.
 templates.env.globals["brand"] = get_settings().brand
+
+
+def _content_hash(path: Path) -> str:
+    try:
+        return hashlib.sha1(path.read_bytes()).hexdigest()[:8]
+    except FileNotFoundError:
+        return "0"
+
+
+# Hashed once per process (a Heroku deploy starts a fresh dyno) so template
+# renders don't re-read these files, and stale browser caches from a previous
+# deploy are busted by the URL changing rather than relying on Cache-Control.
+_STATIC_DIR = ROOT / "static"
+_BRAND_DIR = BRANDING_DIR / TENANT
+_STATIC_VERSIONS = {name: _content_hash(_STATIC_DIR / name) for name in ("style.css", "app.js", "sources.js")}
+_BRAND_VERSIONS = {
+    name: _content_hash(_BRAND_DIR / name) for name in ("theme.css", "favicon.svg", "logo-mark.svg")
+}
+templates.env.globals["static_url"] = lambda name: f"/static/{name}?v={_STATIC_VERSIONS.get(name, '0')}"
+templates.env.globals["brand_url"] = lambda name: f"/brand/{name}?v={_BRAND_VERSIONS.get(name, '0')}"
 
 
 class HistoryTurn(BaseModel):

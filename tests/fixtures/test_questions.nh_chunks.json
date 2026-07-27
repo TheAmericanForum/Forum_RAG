@@ -6,6 +6,7 @@
     "table": null,
     "date": "2026-06-18",
     "policy_area": "Public Education Funding",
+    "question": "What specific concern about property taxes and school funding did S4 identify as a common misconception among residents when new housing developments bring children to an area?",
     "question": "According to S10's discussion of housing solutions, what is the concern with having out-of-state large conglomerates develop housing, and what alternative does the speaker propose?",
     "expected_chunk_id": "concord-concord-2026-06-18:265-267",
     "source_md5": "78a610b633cd93640c9907ba6df1ebdb"
@@ -17,6 +18,7 @@
     "table": null,
     "date": "2026-06-19",
     "policy_area": "Property Taxes and Revenue Needs",
+    "question": "According to S3, what correlation is affecting his concerns about state college costs for his children, and how does he see it connecting to his broader affordability concerns as a renter?",
     "question": "According to S3, what is the relationship between corporate tax changes and education costs, and how does it affect families attending state colleges?",
     "expected_chunk_id": "concord-concord-2026-06-19:112-117",
     "source_md5": "144259f8ed81afa61d661ace0f7c52a3"
@@ -27,6 +29,8 @@
     "session": "Concord",
     "table": "1",
     "date": "2026-06-18",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "What specific legal violation did the city commit when assisting S2 during her homelessness, and what does the law say about when such assistance can be provided?",
     "policy_area": "Housing Affordability And Ownership",
     "question": "According to the speaker, what specific law regarding financial hardship was being violated by the city when they were charged for assistance at a homeless shelter?",
     "expected_chunk_id": "concord-concord-table-1-2026-06-18:74-80",
@@ -39,6 +43,7 @@
     "table": "2",
     "date": "2026-06-19",
     "policy_area": "Housing Affordability and Ownership",
+    "question": "What specific policy area did Noah Hodgets say he wanted solutions that \"move the needle\" on, and what does he critique about the approaches legislators have tried so far?",
     "question": "What specific policy area did Noah Hodgets identify as needing solutions that \"move the needle\" without dividing people?",
     "expected_chunk_id": "concord-concord-table-2-2026-06-19:7-9",
     "source_md5": "897bfaca387e1840fd27180f8443d20e"
@@ -50,6 +55,7 @@
     "table": "2",
     "date": "2026-06-19",
     "policy_area": "Housing Affordability and Ownership",
+    "question": "According to the speaker, what specific change did HP 577 bring when it was signed on July 1, 2025, and how does the speaker believe it could help workers afford housing?",
     "question": "According to S2, what is the current median range price of housing in the state, and how quickly are houses being listed on the market?",
     "expected_chunk_id": "concord-concord-table-2-2026-06-19-1:12-14",
     "source_md5": "b48f735722321991d83c2a8ddec248e9"
@@ -61,6 +67,7 @@
     "table": "4",
     "date": "2026-06-18",
     "policy_area": "Property Taxes and Revenue Needs",
+    "question": "What specific cost burden does open enrollment create for towns when students transfer between districts, according to the testimony S2 attended at the executive council?",
     "question": "According to the testimony at the executive council about open enrollment, what is the specific financial impact when a student from one town is sent to school in another town, and what example does S2 give involving Londonderry and Hillsborough?",
     "expected_chunk_id": "concord-concord-table-4-2026-06-18:233-234",
     "source_md5": "06822eef452e258dc6aa778834753025"

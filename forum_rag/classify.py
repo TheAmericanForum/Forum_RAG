@@ -89,7 +89,23 @@ def _classify_one(text: str, area_names: list[str], descriptions: list[str]) -> 
     except json.JSONDecodeError as e:
         log.error("Classify response was not valid JSON: %r", text_out[:500])
         raise ExternalServiceError(f"Anthropic classify returned malformed JSON: {e}") from e
-    return data.get("area") or "other"
+    return canonical_area(data.get("area"))
+
+
+def canonical_area(name: Optional[str]) -> str:
+    """Map an area name onto the exact configured spelling, case-insensitively.
+
+    Search hard-filters on byte-equal policy_areas payloads, so any label written to
+    the store MUST match settings.policy_areas exactly — a case-drifted label (e.g.
+    "Housing Affordability And Ownership") makes its chunks unreachable forever.
+    Returns 'other' for anything that matches no configured area.
+    """
+    if not name:
+        return "other"
+    for area in get_settings().policy_areas:
+        if area.name.casefold() == name.casefold():
+            return area.name
+    return "other"
 
 
 def classify_transcript(text: str) -> str:

@@ -28,6 +28,8 @@ _PAYLOAD_INDEXES = [
     ("drive_file_id", qm.PayloadSchemaType.KEYWORD),
     ("transcript_id", qm.PayloadSchemaType.KEYWORD),
     ("citation_id", qm.PayloadSchemaType.KEYWORD),
+    ("content_sha256", qm.PayloadSchemaType.KEYWORD),
+    ("date", qm.PayloadSchemaType.KEYWORD),
 ]
 
 
@@ -146,6 +148,48 @@ def stored_md5_for_file(drive_file_id: str) -> Optional[str]:
     return None
 
 
+def files_with_content_hash(content_sha256: str) -> dict[str, str]:
+    """Return {drive_file_id: source_file} for every indexed file with this content hash.
+
+    Used to detect the same recording ingested under two different Drive paths.
+    Duplicate copies are NOT byte-identical files (their embedded source_file path
+    differs, so source_md5 differs too) — only a fingerprint of the transcript
+    content itself identifies them.
+    """
+    scroll_filter = qm.Filter(
+        must=[qm.FieldCondition(key="content_sha256", match=qm.MatchValue(value=content_sha256))]
+    )
+    out: dict[str, str] = {}
+    for point in iter_all_points(scroll_filter, with_payload=["drive_file_id", "source_file"]):
+        payload = point.payload or {}
+        file_id = payload.get("drive_file_id")
+        if file_id and file_id not in out:
+            out[file_id] = payload.get("source_file") or ""
+    return out
+
+
+def chunk_ms_by_file(date: str) -> dict[str, tuple[str, set[tuple[int, int]]]]:
+    """Return {drive_file_id: (source_file, {(start_ms, end_ms), ...})} for every
+    indexed file recorded on `date`.
+
+    Feeds the near-duplicate check in ingestion: the same audio transcribed twice
+    differs slightly in text (so content hashes miss it) but keeps essentially the
+    same chunk timestamps.
+    """
+    scroll_filter = qm.Filter(must=[qm.FieldCondition(key="date", match=qm.MatchValue(value=date))])
+    out: dict[str, tuple[str, set[tuple[int, int]]]] = {}
+    fields = ["drive_file_id", "source_file", "start_ms", "end_ms"]
+    for point in iter_all_points(scroll_filter, with_payload=fields):
+        payload = point.payload or {}
+        file_id = payload.get("drive_file_id")
+        if not file_id:
+            continue
+        if file_id not in out:
+            out[file_id] = (payload.get("source_file") or "", set())
+        out[file_id][1].add((payload.get("start_ms") or 0, payload.get("end_ms") or 0))
+    return out
+
+
 def existing_citation_ids_for_file(drive_file_id: str) -> dict[str, str]:
     """Return {chunk_id: citation_id} for every already-indexed chunk of this file.
 
@@ -206,6 +250,7 @@ def upsert_chunks(
     *,
     drive_file_id: str,
     source_md5: str,
+    content_sha256: str,
     policy_areas_by_chunk: list[list[str]],
     existing_citation_ids: Optional[dict[str, str]] = None,
 ) -> None:
@@ -230,6 +275,7 @@ def upsert_chunks(
             "transcript_id": chunk.transcript_id,
             "drive_file_id": drive_file_id,
             "source_md5": source_md5,
+            "content_sha256": content_sha256,
             "text": chunk.text,
             "speakers": chunk.speakers,
             "start_ms": chunk.start_ms,
@@ -259,7 +305,12 @@ def search(
     session: Optional[str] = None,
     speaker: Optional[str] = None,
 ) -> list[dict[str, Any]]:
-    """Vector-search the collection, optionally AND-filtered by policy_area/session/speaker."""
+    """Vector-search the collection, optionally AND-filtered by policy_area/session/speaker.
+
+    Results are diversified: at most retrieval.max_per_source hits per transcript, so
+    a single long transcript can't fill the whole top_k. The cap is skipped when a
+    session filter is given, since that search deliberately targets one session.
+    """
     settings = get_settings()
     must = []
     if policy_area:
@@ -270,15 +321,29 @@ def search(
         must.append(qm.FieldCondition(key="speakers", match=qm.MatchAny(any=[speaker])))
     query_filter = qm.Filter(must=must) if must else None
 
+    max_per_source = settings.retrieval.max_per_source if not session else 0
+    limit = max(top_k * 4, 32) if max_per_source else top_k
     try:
         search_results = get_client().query_points(
             collection_name=settings.qdrant.collection,
             query=query_vector,
-            limit=top_k,
+            limit=limit,
             query_filter=query_filter,
             with_payload=True,
         )
     except Exception as e:
         log.error("Qdrant search failed: %s", e)
         raise ExternalServiceError(f"Qdrant search failed: {e}") from e
-    return [{"score": point.score, **(point.payload or {})} for point in search_results.points]
+
+    results = []
+    per_source: dict[Any, int] = {}
+    for point in search_results.points:  # already in descending-score order
+        payload = point.payload or {}
+        source = payload.get("transcript_id")
+        if max_per_source and per_source.get(source, 0) >= max_per_source:
+            continue
+        per_source[source] = per_source.get(source, 0) + 1
+        results.append({"score": point.score, **payload})
+        if len(results) >= top_k:
+            break
+    return results

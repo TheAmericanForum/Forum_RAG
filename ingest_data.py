@@ -14,6 +14,7 @@ import argparse
 import hashlib
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 from typing import Callable, Iterable, Optional
@@ -32,6 +33,49 @@ log = logging.getLogger(__name__)
 
 def _md5(raw: bytes) -> str:
     return hashlib.md5(raw).hexdigest()
+
+
+def content_fingerprint(chunk_texts: Iterable[str]) -> str:
+    """Content identity for a transcript: sha256 over its chunk texts, in order.
+
+    Chunking is deterministic, so the same transcription always fingerprints the
+    same — even when the containing JSON files differ (duplicate recordings under
+    two Drive paths embed different source_file values, so their file md5s differ).
+    Also computable straight from indexed chunks, without re-downloading the source.
+    """
+    digest = hashlib.sha256()
+    for text in chunk_texts:
+        digest.update(text.encode("utf-8"))
+        digest.update(b"\x00")
+    return digest.hexdigest()
+
+
+# Minimum Jaccard overlap of two files' chunk-timestamp sets to call them the same
+# recording. Same-audio re-transcriptions overlap >= ~0.85 (small ASR jitter moves a
+# few chunk boundaries); distinct recordings share essentially no exact timestamps.
+NEAR_DUP_JACCARD = 0.5
+
+
+def ms_jaccard(a: set[tuple[int, int]], b: set[tuple[int, int]]) -> float:
+    """Jaccard similarity of two chunk (start_ms, end_ms) timestamp sets."""
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
+def dup_rank(source_file: str) -> tuple[int, int, str]:
+    """Sort key deciding which copy of a duplicated recording to keep (lowest wins).
+
+    Prefer the deeper source path — its parent folder gives the more specific
+    session label (e.g. '.../Concord/Concord - table 8.m4a' labels the session
+    'Concord', while the flat copy labels it after the root folder). Then prefer a
+    path carrying an ISO date: it feeds the citation metadata and the date-scoped
+    near-duplicate guard, which an undated copy can't participate in. Final ties
+    break lexicographically so the choice is deterministic.
+    """
+    parts = [p for p in (source_file or "").replace("\\", "/").split("/") if p]
+    has_date = 0 if re.search(r"\d{4}-\d{2}-\d{2}", source_file or "") else 1
+    return (-len(parts), has_date, source_file or "")
 
 
 def ingest_one(
@@ -71,6 +115,36 @@ def ingest_one(
         return 0
 
     texts = [chunk.text for chunk in chunks]
+
+    # Duplicate-recording guard: the same recording can sit under two Drive paths
+    # (different drive_file_id AND different file md5, since the embedded source_file
+    # path differs). Exact copies share a content fingerprint; the same audio
+    # *re-transcribed* has slight ASR text jitter, so those are caught by
+    # near-identical chunk timestamps instead. Keep the copy dup_rank() prefers;
+    # the other is skipped (or evicted, if already indexed).
+    content_sha256 = content_fingerprint(texts)
+    duplicates = {
+        file_id: source_file
+        for file_id, source_file in store.files_with_content_hash(content_sha256).items()
+        if file_id != drive_file_id
+    }
+    if transcript.date:
+        own_ms = {(chunk.start_ms, chunk.end_ms) for chunk in chunks}
+        for file_id, (source_file, ms_set) in store.chunk_ms_by_file(transcript.date).items():
+            if file_id != drive_file_id and file_id not in duplicates:
+                if ms_jaccard(own_ms, ms_set) >= NEAR_DUP_JACCARD:
+                    duplicates[file_id] = source_file
+    if duplicates:
+        best_source = min(duplicates.values(), key=dup_rank)
+        if dup_rank(best_source) <= dup_rank(transcript.source_file):
+            log.info("Skipping %s: duplicate of already-indexed %s", name, best_source)
+            print(f"  skip (duplicate of {best_source}): {name}")
+            return 0
+        for file_id, source_file in duplicates.items():
+            log.info("Evicting %s: duplicate of %s, which is preferred", source_file, name)
+            print(f"  evict (duplicate, less specific path): {source_file}")
+            store.delete_file(file_id)
+
     full_text = "\n".join(f"{turn.speaker}: {turn.text}" for turn in transcript.turns if turn.text)
     area = resolve_policy_area(full_text, name, interactive=interactive)
     areas = [[area]] * len(chunks)
@@ -83,6 +157,7 @@ def ingest_one(
         vectors,
         drive_file_id=drive_file_id,
         source_md5=source_md5,
+        content_sha256=content_sha256,
         policy_areas_by_chunk=areas,
         existing_citation_ids=existing_citation_ids,
     )

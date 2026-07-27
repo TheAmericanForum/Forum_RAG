@@ -74,9 +74,10 @@ RETRIEVE_SYSTEM = (
     "transcripts. Your ONLY job right now is to gather evidence: call search_transcripts "
     "as many times as needed to collect every passage relevant to the user's LATEST "
     "question, within the conversation's policy area — vary your queries by sub-topic, "
-    "proposal, and trade-off, but do not search outside that area. Do NOT write the "
-    "final answer yet. When you have gathered enough, stop calling tools and reply with "
-    "the single word DONE.\n\n"
+    "proposal, and trade-off, but do not search outside that area. Be sure to pull evidence "
+    "from ALL relevant transcripts and gather evidence from as many different transcripts as possible. "
+    "Do NOT write the final answer yet. When you have gathered enough, stop calling tools and "
+    "reply with the single word DONE.\n\n"
     "CONVERSATION CONTEXT\n"
     "- You may be shown earlier turns of this conversation before the latest question. "
     "Use them only to resolve references in the latest question (e.g. \"that proposal,\" "
@@ -87,7 +88,7 @@ RETRIEVE_SYSTEM = (
 
 SYNTH_SYSTEM = (
     "You answer questions about community policy discussions using ONLY the provided "
-    "transcript excerpts. Never assert a fact without having a quotaion or citaion to back it up."
+    "transcript excerpts. Never assert a fact without a quotation or citation to back it up. "
     "Center the response on the PROPOSALS raised and the TRADE-OFFS "
     "and concerns discussed, and highlight where there is CONSENSUS and where there is "
     "DISAGREEMENT.\n\n"
@@ -231,6 +232,35 @@ def _run_search(args: dict, gathered: dict[str, dict], *, policy_area: str) -> l
             }
         )
     return brief
+
+
+def _cap_for_synthesis(chunks: list[dict]) -> list[dict]:
+    """Bound how many gathered chunks reach synthesis.
+
+    Multi-round gathering can pile up 80-90 chunks, which measurably degrades
+    citation quality. Keep the best-scoring retrieval.max_synthesis_chunks, capped
+    per transcript at retrieval.max_per_source so one transcript can't dominate the
+    prompt, then refill any slots the cap left unused. Returns them in score order.
+    """
+    retrieval = get_settings().retrieval
+    if len(chunks) <= retrieval.max_synthesis_chunks:
+        return chunks
+    kept, overflow = [], []
+    per_source: dict = {}
+    for chunk in sorted(chunks, key=lambda c: c.get("score") or 0.0, reverse=True):
+        source = chunk.get("transcript_id")
+        if per_source.get(source, 0) < retrieval.max_per_source:
+            per_source[source] = per_source.get(source, 0) + 1
+            kept.append(chunk)
+        else:
+            overflow.append(chunk)
+        if len(kept) >= retrieval.max_synthesis_chunks:
+            break
+    # Refill from the per-source overflow if the cap left slots unused.
+    kept.extend(overflow[: retrieval.max_synthesis_chunks - len(kept)])
+    kept.sort(key=lambda c: c.get("score") or 0.0, reverse=True)
+    log.info("Capped synthesis context to %d of %d gathered chunk(s)", len(kept), len(chunks))
+    return kept
 
 
 def _synthesize(
@@ -503,7 +533,7 @@ def answer(
         messages.append({"role": "user", "content": tool_results})
 
     rounds_used = round_num + 1
-    chunks = list(gathered.values())
+    chunks = _cap_for_synthesis(list(gathered.values()))
     if not chunks:
         if any_search_errored:
             log.warning("Query %r found no chunks after search infrastructure errors", question)
