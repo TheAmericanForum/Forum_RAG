@@ -72,6 +72,12 @@ class ModelsCfg(BaseModel):
 
 class RetrievalCfg(BaseModel):
     top_k: int = 8
+    # Cap on results per transcript in one search, so one long, chunk-dense
+    # transcript can't monopolize the top_k and crowd out shorter conversations.
+    max_per_source: int = 3
+    # Cap on total chunks handed to synthesis; unbounded gathers (80-90 chunks over
+    # 6 rounds) measurably degraded citation quality.
+    max_synthesis_chunks: int = 48
 
 
 class QdrantCfg(BaseModel):

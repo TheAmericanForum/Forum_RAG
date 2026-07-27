@@ -144,6 +144,13 @@ def main() -> None:
         # treat it as stale once so it picks one up, rather than trusting it forever.
         return row.get("source_md5") != current_md5
 
+    # Drop rows whose transcript is no longer indexed (e.g. removed from Drive, or
+    # deleted as a duplicate by dedupe_qdrant.py). Left in place they'd fail the
+    # retrieval tests forever, since nothing can retrieve a transcript that's gone.
+    for transcript_id in [tid for tid in existing if tid not in by_transcript]:
+        print(f"  pruning question for de-indexed transcript: {transcript_id}")
+        del existing[transcript_id]
+
     todo = [tid for tid in by_transcript if _is_stale(tid)]
     if args.limit is not None:
         todo = todo[: args.limit]

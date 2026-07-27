@@ -18,6 +18,8 @@ models:
 
 retrieval:
   top_k: 8
+  max_per_source: 3         # per-search cap on results from one transcript (diversity)
+  max_synthesis_chunks: 48  # cap on total chunks passed to answer synthesis
 
 qdrant:
   collection: "chunks"

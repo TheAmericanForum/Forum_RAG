@@ -6,8 +6,9 @@
     "table": null,
     "date": "2026-06-14",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "According to S4, what comparison does he make between the military structure and civilian governance, and what specific example from his military experience (involving the chief's mess and \"business on the tangle\") does he cite to support his argument about efficiency?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-2026-06-14:630-640"
+    "question": "According to S4's comparison between military and civilian work environments, what specific structural difference between the military and civilian communities is making it harder for them to adjust as a civilian, and how does this relate to their view on how community issues should be handled?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-2026-06-14:630-640",
+    "source_md5": "e1f219b2ae9342070d555334d5b186a8"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-2026-07-01",
@@ -16,8 +17,9 @@
     "table": null,
     "date": "2026-07-01",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "What is the time limit given for the group to develop and finalize their one to three recommendation statements that will be shared with legislators?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-2026-07-01:157-160"
+    "question": "What is the expected timeframe for the table group to develop their one to three recommendation statements during this facilitated session?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-2026-07-01:157-160",
+    "source_md5": "68f06a59b4d09c03feffcbd609140809"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-3-2026-06-16",
@@ -26,8 +28,9 @@
     "table": "3",
     "date": "2026-06-16",
     "policy_area": "Responsive Elected Leaders",
-    "question": "According to S7's argument, what percentage of the issues that affect you day-to-day come from local and state government rather than the federal government?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-3-2026-06-16:46-49"
+    "question": "According to the speakers in this excerpt, what percentage of issues affecting your day-to-day life are determined at the local and state government level rather than federal?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-3-2026-06-16:46-49",
+    "source_md5": "5424fe43755cba6ca7f2a084639fbb20"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-4-2026-06-14",
@@ -36,8 +39,9 @@
     "table": "4",
     "date": "2026-06-14",
     "policy_area": "Responsive Elected Leaders",
-    "question": "According to the journalist speaker, what specific mechanism in voting has made it easy for the same people to continue getting elected, and what alternative action are voters failing to take?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-4-2026-06-14:121-122"
+    "question": "According to the speaker, what specific voting mechanism has made it easy for the same legislators to continue getting elected repeatedly?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-4-2026-06-14:121-122",
+    "source_md5": "13af02c72cf06bce871ab143a1e6f816"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-5-2026-06-14",
@@ -46,8 +50,9 @@
     "table": "5",
     "date": "2026-06-14",
     "policy_area": "Rising Cost of Living",
-    "question": "What specific example from another country does S1 provide regarding government incentives for residential solar installation?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-5-2026-06-14:120-123"
+    "question": "What specific example does S4 give about how AI data centers create incoming demand on power systems, and what does S4 argue would be needed to push toward efficiency instead of continued reliance on large data centers?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-5-2026-06-14:120-123",
+    "source_md5": "c7e2a3080720a2eda14eef601dd2348f"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-14",
@@ -56,8 +61,9 @@
     "table": "6",
     "date": "2026-06-14",
     "policy_area": "Slow Wage Growth",
-    "question": "What specific documentation requirement mentioned in the excerpt is causing barriers for elderly people trying to apply for jobs, and how can they obtain it?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-14:78-92"
+    "question": "What specific document does S4 mention that elderly people often need and must be dated within 30 days when seeking assistance with job applications?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-14:78-92",
+    "source_md5": "a107ac2bd043dabdce73be00c7b423e8"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-14-1",
@@ -66,18 +72,9 @@
     "table": "6",
     "date": "2026-06-14",
     "policy_area": "Slow Wage Growth",
-    "question": "In the new Greenville Housing Fund community being built on the corner of Lawrence Road, how many of the 100 units are designated for those earning 30% of the AMI and below?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-14-1:79-82"
-  },
-  {
-    "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-26",
-    "drive_file_id": "1M2HfwH1BD2M8vzFey-dvK-SP-qtYWhiA",
-    "session": "6.13 Greenville Recordings",
-    "table": "6",
-    "date": "2026-06-26",
-    "policy_area": "Slow Wage Growth",
-    "question": "What specific challenge related to Social Security documentation do elderly people face when trying to apply for jobs, and what is the required timeframe for the document?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-26:78-92"
+    "question": "In the new Greenville Housing Fund community on Lawrence Road corner, what percentage of the 100 units will be designated for households making 30% of the AMI and below?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-6-2026-06-14-1:79-82",
+    "source_md5": "84379aeda63325e6648389c885228f46"
   },
   {
     "transcript_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-8-2026-06-14",
@@ -86,8 +83,9 @@
     "table": "8",
     "date": "2026-06-14",
     "policy_area": "Responsive Elected Leaders",
-    "question": "What is the One Community Dinner initiative that Hope Blackley started, and how does it bring together people across different social levels?",
-    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-8-2026-06-14:15-20"
+    "question": "What was the specific amount of the penny sales tax referendum that Hope Blackley helped secure for Spartanburg's new courthouse?",
+    "expected_chunk_id": "6-13-greenville-recordings-6-13-greenville-recordings-table-8-2026-06-14:15-20",
+    "source_md5": "8cd708fa581b00c72221fbbf2137f86b"
   },
   {
     "transcript_id": "6-2-columbia-recordings-6-2-columbia-recordings-2026-06-02",
@@ -96,8 +94,9 @@
     "table": null,
     "date": "2026-06-02",
     "policy_area": "Slow Wage Growth",
-    "question": "What are the five quick introduction questions that facilitators planned to ask each participant, and what was the time limit set for each person to answer them?",
-    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-2026-06-02:1-13"
+    "question": "What are the six conversation agreements that the facilitators had participants read aloud at the beginning of the meeting?",
+    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-2026-06-02:1-13",
+    "source_md5": "d066af73f7aec632a510a287a89eea34"
   },
   {
     "transcript_id": "6-2-columbia-recordings-6-2-columbia-recordings-2026-06-02-1",
@@ -106,8 +105,9 @@
     "table": null,
     "date": "2026-06-02",
     "policy_area": "Responsive Elected Leaders",
-    "question": "What specific frustration did S5 express about their experience contacting politicians since moving to South Carolina, and what type of responses did they typically receive?",
-    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-2026-06-02-1:62-67"
+    "question": "According to S5, what specific frustration does S5 express about how legislators respond to constituents' communications?",
+    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-2026-06-02-1:62-67",
+    "source_md5": "11733e4b0772942889d214c96a2f27c4"
   },
   {
     "transcript_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-1-2026-06-02",
@@ -116,8 +116,9 @@
     "table": "1",
     "date": "2026-06-02",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "What specific staffing difference did the speaker observe between North Carolina's and South Carolina's Department of Transportation rail divisions?",
-    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-1-2026-06-02:170-171"
+    "question": "According to the speaker, how many people did North Carolina's Department of Transportation have in their rail division compared to South Carolina's capacity to handle rail projects?",
+    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-1-2026-06-02:170-171",
+    "source_md5": "43859e1abdaa69116e3cdbf4240c0af7"
   },
   {
     "transcript_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-2-2026-06-02",
@@ -126,8 +127,9 @@
     "table": "2",
     "date": "2026-06-02",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "What specific contractual approach does S5 propose for addressing traffic infrastructure problems, and what regulatory change did S2 say was necessary to implement it?",
-    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-2-2026-06-02:337-347"
+    "question": "What specific contractual approach did S5 suggest was needed to address traffic issues, and what legal change did S2 indicate was required to make it possible?",
+    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-2-2026-06-02:337-347",
+    "source_md5": "bc470a8ddf5a1f6a5f9551b16adf7b58"
   },
   {
     "transcript_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-8-2026-06-02",
@@ -136,8 +138,9 @@
     "table": "8",
     "date": "2026-06-02",
     "policy_area": "Rising Cost of Living",
-    "question": "According to S6, what is the estimated cost mentioned for fixing the Broad River area, and what is their assessment of the outcome?",
-    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-8-2026-06-02:187-195"
+    "question": "According to the speaker from Baltimore, how much money was spent to fix the Broad river area, and does the speaker think it was successful?",
+    "expected_chunk_id": "6-2-columbia-recordings-6-2-columbia-recordings-table-8-2026-06-02:187-195",
+    "source_md5": "f3414073671e86c30aac0b437b88f58f"
   },
   {
     "transcript_id": "6-23-charleston-6-23-charleston-2026-06-24",
@@ -146,8 +149,9 @@
     "table": null,
     "date": "2026-06-24",
     "policy_area": "Rising Cost of Living",
-    "question": "According to S3, what specific wage opportunity is being presented for journeyman electricians working on data center construction, and how does this compare to local wages?",
-    "expected_chunk_id": "6-23-charleston-6-23-charleston-2026-06-24:174-178"
+    "question": "According to S3's discussion of data center development, what specific skilled trades are mentioned as blue-collar career opportunities that could result from building infrastructure?",
+    "expected_chunk_id": "6-23-charleston-6-23-charleston-2026-06-24:174-178",
+    "source_md5": "62c616176824afde7cad7916ee5e0719"
   },
   {
     "transcript_id": "6-23-charleston-6-23-charleston-2026-06-24-1",
@@ -156,8 +160,9 @@
     "table": null,
     "date": "2026-06-24",
     "policy_area": "Rising Cost of Living",
-    "question": "In Spring (March or April), what specific pattern did residents in Florence, South Carolina experience with their power bills, and what concern did S4 raise about the lack of transparency in how this occurred?",
-    "expected_chunk_id": "6-23-charleston-6-23-charleston-2026-06-24-1:110-112"
+    "question": "According to S4's account, what specific increases did power bills experience in Florence, South Carolina in March or April, and what was the nature of the transparency issue that prevented people from organizing in response?",
+    "expected_chunk_id": "6-23-charleston-6-23-charleston-2026-06-24-1:110-112",
+    "source_md5": "2c4e9d6356b57e6c534783fffae18a2f"
   },
   {
     "transcript_id": "6-23-charleston-6-23-charleston-2026-06-26",
@@ -166,8 +171,9 @@
     "table": null,
     "date": "2026-06-26",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "According to the discussion, what bill related to \"concurrence\" was proposed to address zoning and infrastructure impact issues, and why did it represent a way forward for allowing local jurisdictions more authority?",
-    "expected_chunk_id": "6-23-charleston-6-23-charleston-2026-06-26:125-129"
+    "question": "What specific legislative change related to \"concurrence\" zoning was discussed as a potential way forward to allow counties and cities to address road infrastructure costs?",
+    "expected_chunk_id": "6-23-charleston-6-23-charleston-2026-06-26:125-129",
+    "source_md5": "a2235ae9293c038e1cea42cce9c0861f"
   },
   {
     "transcript_id": "6-23-charleston-6-23-charleston-table-3-2026-06-24",
@@ -176,8 +182,9 @@
     "table": "3",
     "date": "2026-06-24",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "What specific concerns did participants raise about the Infrastructure Bank's role in distributing funds, and why do they believe it is not receiving adequate attention in policy discussions?",
-    "expected_chunk_id": "6-23-charleston-6-23-charleston-table-3-2026-06-24:220-230"
+    "question": "What specific concerns did the group raise about South Carolina's ability to fund infrastructure and services if the state eliminates income tax and relies primarily on tourism revenue?",
+    "expected_chunk_id": "6-23-charleston-6-23-charleston-table-3-2026-06-24:220-230",
+    "source_md5": "05a6df63a409ada5158846e288c6618b"
   },
   {
     "transcript_id": "6-23-charleston-6-23-charleston-table-8-2026-06-24",
@@ -186,8 +193,9 @@
     "table": "8",
     "date": "2026-06-24",
     "policy_area": "Responsive Elected Leaders",
-    "question": "Why does S4 argue that three terms would be appropriate for congresspeople and senators, while maintaining two terms for president?",
-    "expected_chunk_id": "6-23-charleston-6-23-charleston-table-8-2026-06-24:139-155"
+    "question": "What compromise does S2 propose regarding the number of terms for congressional representatives or senators?",
+    "expected_chunk_id": "6-23-charleston-6-23-charleston-table-8-2026-06-24:139-155",
+    "source_md5": "580fd26836fab3a8a559594ee69111a4"
   },
   {
     "transcript_id": "6-23-charleston-6-23-charleston-table-9-2026-06-24",
@@ -196,8 +204,31 @@
     "table": "9",
     "date": "2026-06-24",
     "policy_area": "Responsive Elected Leaders",
-    "question": "What concern does S3 raise about the behavior of politicians who are term-limited out and running in their final term?",
-    "expected_chunk_id": "6-23-charleston-6-23-charleston-table-9-2026-06-24:295-305"
+    "question": "According to the excerpt, what specific concern does S3 raise about politicians who are term limited out in their final term?",
+    "expected_chunk_id": "6-23-charleston-6-23-charleston-table-9-2026-06-24:295-305",
+    "source_md5": "ea01ca3aab9948ca9ebbf74346a4eca1"
+  },
+  {
+    "transcript_id": "7-23-florence-7-23-florence-2026-07-26",
+    "drive_file_id": "1WcNOhslGFTiD-24pvE_XYWv9GdIsSMvt",
+    "session": "7:23 Florence",
+    "table": null,
+    "date": "2026-07-26",
+    "policy_area": "Growth, Infrastructure, and Roads",
+    "question": "What is the \"municipal penny\" proposal mentioned in this excerpt, and what specifically would it fund?",
+    "expected_chunk_id": "7-23-florence-7-23-florence-2026-07-26:195-210",
+    "source_md5": "801c34b7ac080d70b5e0da24743cfa77"
+  },
+  {
+    "transcript_id": "7-23-florence-7-23-florence-2026-07-26-1",
+    "drive_file_id": "1-5cAVmzsk_jceJLcm3xsn-KHhHcT8HQK",
+    "session": "7:23 Florence",
+    "table": null,
+    "date": "2026-07-26",
+    "policy_area": "Responsive Elected Leaders",
+    "question": "What specific task is S3 asking participants to complete at their tables, and what two outputs does S3 want from each group by the end of the discussion?",
+    "expected_chunk_id": "7-23-florence-7-23-florence-2026-07-26-1:228-234",
+    "source_md5": "2045e5f4fabf48c157e260c37911267a"
   },
   {
     "transcript_id": "infrastructure-sc-infrastructure-2026-06-16",
@@ -206,8 +237,9 @@
     "table": null,
     "date": "2026-06-16",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "According to the transcript, what color is the button that users need to click to leave or hang up?",
-    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16:1-3"
+    "question": "What color is the button that S1 instructs S2 to click in order to end the call?",
+    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16:1-3",
+    "source_md5": "e4375ed18ec5aee865391c31d97ebbd8"
   },
   {
     "transcript_id": "infrastructure-sc-infrastructure-2026-06-16-4",
@@ -216,8 +248,9 @@
     "table": null,
     "date": "2026-06-16",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "What was Chelsea's shooting performance in the earlier matchup between Dallas and Chelsea this season?",
-    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16-4:1-1"
+    "question": "What was Chelsea's field goal shooting performance in the earlier season matchup between Dallas and the opposing team?",
+    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16-4:1-1",
+    "source_md5": "0f0bb64178f7272ad1bc44dc708e463f"
   },
   {
     "transcript_id": "infrastructure-sc-infrastructure-2026-06-16-5",
@@ -226,8 +259,9 @@
     "table": null,
     "date": "2026-06-16",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "What specific speed limit change does S2 propose as a solution to improve road safety in South Carolina, and what evidence from Pennsylvania does S2 cite to support this proposal?",
-    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16-5:23-28"
+    "question": "What specific speed limit changes does S2 propose for roads with high truck traffic, and what evidence does S2 cite from their experience in Pennsylvania to support this proposal?",
+    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16-5:23-28",
+    "source_md5": "e4c86f4b7c54b648070c892b83d1adfe"
   },
   {
     "transcript_id": "infrastructure-sc-infrastructure-2026-06-16-6",
@@ -236,8 +270,9 @@
     "table": null,
     "date": "2026-06-16",
     "policy_area": "Growth, Infrastructure, and Roads",
-    "question": "Why is the local government in the area rejecting impact fees for builders as a solution to address infrastructure strain from new development?",
-    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16-6:21-25"
+    "question": "According to the speakers, what infrastructure challenge is Dorchester County facing alongside rapid residential development, and what specific proposal do they mention that local officials are resisting to address it?",
+    "expected_chunk_id": "infrastructure-sc-infrastructure-2026-06-16-6:21-25",
+    "source_md5": "dc86a7f12760468a111b20b1863eba90"
   },
   {
     "transcript_id": "responsive-elected-leaders-sc-responsive-elected-leaders-2026-06-16",
@@ -246,8 +281,9 @@
     "table": null,
     "date": "2026-06-16",
     "policy_area": "Responsive Elected Leaders",
-    "question": "According to the excerpt, what specific criticism does S2 raise about the current redistricting process, and why does S2 say the maps need to be redrawn?",
-    "expected_chunk_id": "responsive-elected-leaders-sc-responsive-elected-leaders-2026-06-16:32-37"
+    "question": "What specific reasons did S4 give for why electoral reform will be challenging to fix, beyond just the need for multiple simultaneous changes?",
+    "expected_chunk_id": "responsive-elected-leaders-sc-responsive-elected-leaders-2026-06-16:32-37",
+    "source_md5": "d9ce474154a70235861fffc98e02008c"
   },
   {
     "transcript_id": "slow-wage-growth-sc-slow-wage-growth-2026-06-18",
@@ -256,8 +292,9 @@
     "table": null,
     "date": "2026-06-18",
     "policy_area": "Slow Wage Growth",
-    "question": "What specific proposal or action did S1 find helpful?",
-    "expected_chunk_id": "slow-wage-growth-sc-slow-wage-growth-2026-06-18:1-1"
+    "question": "What specific proposal or action did S1 believe would be helpful?",
+    "expected_chunk_id": "slow-wage-growth-sc-slow-wage-growth-2026-06-18:1-1",
+    "source_md5": "f070bd92bee24d674eb948e0b0c01328"
   },
   {
     "transcript_id": "slow-wage-growth-sc-slow-wage-growth-2026-06-18-2",
@@ -266,7 +303,8 @@
     "table": null,
     "date": "2026-06-18",
     "policy_area": "Slow Wage Growth",
-    "question": "What specific concern did S1 express about going back to school to get Crate?",
-    "expected_chunk_id": "slow-wage-growth-sc-slow-wage-growth-2026-06-18-2:1-1"
+    "question": "What specific proposal or plan does S1 express concern about having to go back to school for?",
+    "expected_chunk_id": "slow-wage-growth-sc-slow-wage-growth-2026-06-18-2:1-1",
+    "source_md5": "f47848f2c17ef8ec8908b053f64573ad"
   }
 ]
