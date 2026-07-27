@@ -220,6 +220,28 @@
     "source_md5": "ea01ca3aab9948ca9ebbf74346a4eca1"
   },
   {
+    "transcript_id": "7-23-florence-7-23-florence-2026-07-26",
+    "drive_file_id": "1WcNOhslGFTiD-24pvE_XYWv9GdIsSMvt",
+    "session": "7:23 Florence",
+    "table": null,
+    "date": "2026-07-26",
+    "policy_area": "Growth, Infrastructure, and Roads",
+    "question": "What is a municipal penny and how would it work to fund infrastructure projects in South Carolina cities like Florence?",
+    "expected_chunk_id": "7-23-florence-7-23-florence-2026-07-26:195-210",
+    "source_md5": "801c34b7ac080d70b5e0da24743cfa77"
+  },
+  {
+    "transcript_id": "7-23-florence-7-23-florence-2026-07-26-1",
+    "drive_file_id": "1-5cAVmzsk_jceJLcm3xsn-KHhHcT8HQK",
+    "session": "7:23 Florence",
+    "table": null,
+    "date": "2026-07-26",
+    "policy_area": "Responsive Elected Leaders",
+    "question": "What are the two or three recommendation statements that the table was asked to develop to present to their legislator based on their discussion?",
+    "expected_chunk_id": "7-23-florence-7-23-florence-2026-07-26-1:228-234",
+    "source_md5": "2045e5f4fabf48c157e260c37911267a"
+  },
+  {
     "transcript_id": "infrastructure-sc-infrastructure-2026-06-16",
     "drive_file_id": "1zjHFYm3OZxQ9SmBzdcW9gDDUqeHJloUR",
     "session": "Infrastructure ",
