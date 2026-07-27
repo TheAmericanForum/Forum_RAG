@@ -7,6 +7,7 @@
     "date": "2026-06-18",
     "policy_area": "Public Education Funding",
     "question": "What specific concern about property taxes and school funding did S4 identify as a common misconception among residents when new housing developments bring children to an area?",
+    "question": "According to S10's discussion of housing solutions, what is the concern with having out-of-state large conglomerates develop housing, and what alternative does the speaker propose?",
     "expected_chunk_id": "concord-concord-2026-06-18:265-267",
     "source_md5": "78a610b633cd93640c9907ba6df1ebdb"
   },
@@ -18,6 +19,7 @@
     "date": "2026-06-19",
     "policy_area": "Property Taxes and Revenue Needs",
     "question": "According to S3, what correlation is affecting his concerns about state college costs for his children, and how does he see it connecting to his broader affordability concerns as a renter?",
+    "question": "According to S3, what is the relationship between corporate tax changes and education costs, and how does it affect families attending state colleges?",
     "expected_chunk_id": "concord-concord-2026-06-19:112-117",
     "source_md5": "144259f8ed81afa61d661ace0f7c52a3"
   },
@@ -29,6 +31,8 @@
     "date": "2026-06-18",
     "policy_area": "Housing Affordability and Ownership",
     "question": "What specific legal violation did the city commit when assisting S2 during her homelessness, and what does the law say about when such assistance can be provided?",
+    "policy_area": "Housing Affordability And Ownership",
+    "question": "According to the speaker, what specific law regarding financial hardship was being violated by the city when they were charged for assistance at a homeless shelter?",
     "expected_chunk_id": "concord-concord-table-1-2026-06-18:74-80",
     "source_md5": "3829bb04f29866836199bad2a41536b0"
   },
@@ -40,6 +44,7 @@
     "date": "2026-06-19",
     "policy_area": "Housing Affordability and Ownership",
     "question": "What specific policy area did Noah Hodgets say he wanted solutions that \"move the needle\" on, and what does he critique about the approaches legislators have tried so far?",
+    "question": "What specific policy area did Noah Hodgets identify as needing solutions that \"move the needle\" without dividing people?",
     "expected_chunk_id": "concord-concord-table-2-2026-06-19:7-9",
     "source_md5": "897bfaca387e1840fd27180f8443d20e"
   },
@@ -51,6 +56,7 @@
     "date": "2026-06-19",
     "policy_area": "Housing Affordability and Ownership",
     "question": "According to the speaker, what specific change did HP 577 bring when it was signed on July 1, 2025, and how does the speaker believe it could help workers afford housing?",
+    "question": "According to S2, what is the current median range price of housing in the state, and how quickly are houses being listed on the market?",
     "expected_chunk_id": "concord-concord-table-2-2026-06-19-1:12-14",
     "source_md5": "b48f735722321991d83c2a8ddec248e9"
   },
@@ -62,6 +68,7 @@
     "date": "2026-06-18",
     "policy_area": "Property Taxes and Revenue Needs",
     "question": "What specific cost burden does open enrollment create for towns when students transfer between districts, according to the testimony S2 attended at the executive council?",
+    "question": "According to the testimony at the executive council about open enrollment, what is the specific financial impact when a student from one town is sent to school in another town, and what example does S2 give involving Londonderry and Hillsborough?",
     "expected_chunk_id": "concord-concord-table-4-2026-06-18:233-234",
     "source_md5": "06822eef452e258dc6aa778834753025"
   },
@@ -72,7 +79,7 @@
     "table": "7",
     "date": "2026-06-18",
     "policy_area": "Public Education Funding",
-    "question": "According to the NAACP representative, what is the tension between allowing parents to move their children away from a failing public education system and the risk of providing assistance to wealthy families who don't need it?",
+    "question": "According to the moderator at this forum, what is the tension they identify between allowing families to access better education and preventing affluent families from receiving unneeded public assistance?",
     "expected_chunk_id": "concord-concord-table-7-2026-06-18:184-188",
     "source_md5": "9608c7c3c6a4db58e8ef944653c0a67b"
   },
@@ -83,7 +90,7 @@
     "table": "8",
     "date": "2026-06-18",
     "policy_area": "Energy Cost, Sourcing, and Reliability",
-    "question": "According to the excerpt, what is the price range for firewood per quart, and why does this price tend to increase when other fuel prices rise?",
+    "question": "According to the excerpt, what range does firewood cost per quart and what concern does this raise about using it as a main heating fuel source?",
     "expected_chunk_id": "concord-concord-table-8-2026-06-18:183-194",
     "source_md5": "e0f912445cf10df61e3419b6999b4f37"
   },
@@ -94,7 +101,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Public Education Funding",
-    "question": "What does S1 describe as the \"devil's bargain\" created by the state regarding school funding and property taxes?",
+    "question": "What does S1 describe as the \"devil's bargain\" created by the state regarding property taxes and school funding?",
     "expected_chunk_id": "education-nh-education-2026-07-21:52-55",
     "source_md5": "b817c6558bd547c083f869324628ce5c"
   },
@@ -105,7 +112,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Energy Cost, Sourcing, and Reliability",
-    "question": "What specific dollar increase did S2 report in their electricity bill when comparing their most recent bill to the same month the previous year?",
+    "question": "What was S2's electricity bill for the small apartment they live in compared to the same month last year, and what do they attribute part of the increase to?",
     "expected_chunk_id": "energy-nh-energy-2026-07-21:21-22",
     "source_md5": "22090c90ed6077706620ae429b3b0ecc"
   },
@@ -115,8 +122,8 @@
     "session": "Housing",
     "table": null,
     "date": "2026-07-21",
-    "policy_area": "Housing Affordability and Ownership",
-    "question": "What unusual housing situation did the clinical social worker (S4) experience with their landlord, and what outcome did it lead to regarding their housing decision?",
+    "policy_area": "Housing Affordability And Ownership",
+    "question": "According to S4, what was the outcome when they and their wife needed to relocate because their landlord required major renovations to the rental property they were living in?",
     "expected_chunk_id": "housing-nh-housing-2026-07-21:1-10",
     "source_md5": "695e5f45ab8a3a212d38104eba8ea8a3"
   },
@@ -127,7 +134,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "What specific role does Lisa Nash play in her community that she mentioned during this housing discussion?",
+    "question": "What specific program did Lisa Nash start 18 years ago in her town involving student voting, and how many schools participate in it?",
     "expected_chunk_id": "housing-nh-housing-2026-07-21-2:24-46",
     "source_md5": "a2a50d0fa70d923c888cf66a552cdab0"
   },
@@ -138,7 +145,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "What is the financial barrier to renting in Manchester according to the discussion about landlord upfront payment requirements?",
+    "question": "Under recent New Hampshire legislation, what are the combined upfront costs a landlord can now collect from a tenant before move-in, and how does this affect affordability for renters in Manchester?",
     "expected_chunk_id": "housing-nh-housing-2026-07-21-3:106-117",
     "source_md5": "d9a3aec514cbdf447b11eae222b70086"
   },
@@ -149,7 +156,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "What are the main reasons Dave and Jane gave for participating in this conversation?",
+    "question": "What specific issues related to homelessness does Jane Kennedy want to provide input on for potential solutions?",
     "expected_chunk_id": "housing-nh-housing-2026-07-21-4:1-23",
     "source_md5": "5d20b2e530e2fd5458ddbbdd46c2714c"
   },
@@ -160,7 +167,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "According to the discussion, what specific technical troubleshooting step can Sally take to access her audio settings and change her input device during this online conversation?",
+    "question": "According to this transcript, where should Sally look to access her audio settings and change her input device if her microphone isn't working?",
     "expected_chunk_id": "housing-nh-housing-2026-07-21-5:1-13",
     "source_md5": "a468bd9d943db48ff39ba46bf1b9ee94"
   },
@@ -171,7 +178,7 @@
     "table": null,
     "date": "2026-07-23",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "According to S2's description of the Japan housing model, what specific feature do Japanese apartments have that relates to changing family needs, and what does S2 propose as a solution for young adults unable to enter the housing market?",
+    "question": "According to the speaker's proposal, how could smaller, individually-owned condo units (similar to the Japanese model with minimal kitchens) help create generational wealth and housing mobility for young adults unable to enter the current market?",
     "expected_chunk_id": "nashua-nashua-2026-07-23:1-4",
     "source_md5": "6fa56292f186d617f7e1aaa016c589fd"
   },
@@ -182,7 +189,7 @@
     "table": null,
     "date": "2026-07-23",
     "policy_area": "Property Taxes and Revenue Needs",
-    "question": "According to S12, what is the challenge in educating younger voters compared to how civic education was successfully delivered to previous generations, and what specific example from the past does S12 reference?",
+    "question": "What three specific recommendations did S12 make regarding how to address property tax burden and civic engagement in Nashua?",
     "expected_chunk_id": "nashua-nashua-2026-07-23-1:346-347",
     "source_md5": "ff95b2c8012e9852f8d654fd3c4a3e8a"
   },
@@ -193,7 +200,7 @@
     "table": null,
     "date": "2026-07-23",
     "policy_area": "Public Education Funding",
-    "question": "According to S5's testimony, what specific rule prevented her son from playing basketball for the Academy of Science and Design charter school he attended in Nashua?",
+    "question": "What specific law about sports eligibility prevented S5's son from playing basketball at his charter school, the Academy of Science and Design?",
     "expected_chunk_id": "nashua-nashua-2026-07-23-2:44-53",
     "source_md5": "871d5aa5809ea935890932a55d31f2a7"
   },
@@ -204,7 +211,7 @@
     "table": null,
     "date": "2026-07-26",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "What is the price difference between S3's current home in Thornton and the lowest-priced homes they found in Concord?",
+    "question": "According to the speaker from Thornton, what is the minimum price they found for a home in Concord with two bedrooms and no yard in not decent condition?",
     "expected_chunk_id": "nashua-nashua-2026-07-26:7-13",
     "source_md5": "86996c6f2dcc7184d845208a467ae98e"
   },
@@ -215,7 +222,7 @@
     "table": "1",
     "date": "2026-07-23",
     "policy_area": "Public Education Funding",
-    "question": "According to the speaker, what is New Hampshire's ranking in per pupil public school funding compared to other states, and what does the speaker argue would happen even if per pupil spending were doubled?",
+    "question": "According to the speaker, what is the current national ranking of New Hampshire's public school funding per capita, and what would need to happen to that ranking if per pupil spending were doubled?",
     "expected_chunk_id": "nashua-nashua-table-1-2026-07-23:49-53",
     "source_md5": "32ee47141d5975bf219d7d706cfe85f4"
   },
@@ -226,7 +233,7 @@
     "table": "4",
     "date": "2026-07-23",
     "policy_area": "Energy Cost, Sourcing, and Reliability",
-    "question": "What specific moderation rule did S2 propose for opening up the forum to Manchester and Nashua participants, and what behavior would result in someone's microphone being turned off?",
+    "question": "What specific moderation rules did S2 propose for the town hall format to address unclear legislator responses, and what behavior would result in losing speaking opportunity?",
     "expected_chunk_id": "nashua-nashua-table-4-2026-07-23:16-25",
     "source_md5": "0d3615b01b621d3f318fa6dc28b4489b"
   },
@@ -237,7 +244,7 @@
     "table": "4",
     "date": "2026-07-23",
     "policy_area": "Energy Cost, Sourcing, and Reliability",
-    "question": "Why did the biomass plant in Berlin cancel its power supply contract with CPCNH even though plant operators had already signed the agreement?",
+    "question": "What specific problem did the Berlin biomass plant face with its contract to provide power to CPCNH, and how did investor priorities affect the facility's operation?",
     "expected_chunk_id": "nashua-nashua-table-4-2026-07-23-1:169-176",
     "source_md5": "0b1679ef410954d93fce82242cb322b6"
   },
@@ -248,7 +255,7 @@
     "table": "8",
     "date": "2026-07-24",
     "policy_area": "Public Education Funding",
-    "question": "What labor force challenges does S3 mention when arguing for investment in public education, and how do they connect this to an ICE facility discussion?",
+    "question": "According to S3, what are the specific workforce challenges mentioned by companies in the area, and how does S3 propose using the public education system to address the labor shortage for positions like police officers, firefighters, and nurses?",
     "expected_chunk_id": "nashua-nashua-table-8-2026-07-24:213-218",
     "source_md5": "6b7d7902e8f1b4efdfdb78c28b70e903"
   },
@@ -259,9 +266,20 @@
     "table": "9",
     "date": "2026-07-23",
     "policy_area": "Housing Affordability and Ownership",
-    "question": "What three specific components does S13 propose for an educational campaign to appeal to everyone regarding public education concerns?",
+    "question": "What three specific pathways did the education table propose to address public education concerns, and what are the components of the first pathway that would appeal to everybody?",
     "expected_chunk_id": "nashua-nashua-table-9-2026-07-23:495-498",
     "source_md5": "3b86fb90c7ab1a88bc7bb2e2e0316c1c"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-2026-06-18",
+    "drive_file_id": "1QH_eLrIu0k6bExpZrMOeni0mAI0o95Rp",
+    "session": "NH1 - In-Person Recordings",
+    "table": null,
+    "date": "2026-06-18",
+    "policy_area": "Public Education Funding",
+    "question": "According to the discussion, what percentage of household paycheck typically goes toward housing, and why is this a concern that both tables identified as needing to be addressed?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-2026-06-18:265-267",
+    "source_md5": "4d123bb4146440f21fe79448219fcbf5"
   },
   {
     "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-2026-06-19",
@@ -270,9 +288,42 @@
     "table": null,
     "date": "2026-06-19",
     "policy_area": "Property Taxes and Revenue Needs",
-    "question": "What specific community issue did Mary Murphy identify as causing problems during COVID that motivated her to help bring broadband to every side street in Francis Town?",
+    "question": "What specific community infrastructure challenge did Mary Murphy help address in Francis Town during COVID, and what is she now working to bring to every side street?",
     "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-2026-06-19:39-42",
     "source_md5": "6555a08e43852e76f1295882b08b5ab1"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-1-2026-06-18",
+    "drive_file_id": "1ZajzH7Enzl3cP_LMnAwSZnoJjAJDz_-Q",
+    "session": "NH1 - In-Person Recordings",
+    "table": "1",
+    "date": "2026-06-18",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "According to the speaker's testimony, what law is the city violating by charging reimbursement for homeless shelter assistance, and what does that law state as a condition for when such charges cannot be imposed?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-1-2026-06-18:74-80",
+    "source_md5": "338674cfd2c3c9a49aa1eb4cc80c6cc4"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-2-2026-06-19",
+    "drive_file_id": "1YH9KV1pydrxl3UXnYLXbz3V43EYffKHa",
+    "session": "NH1 - In-Person Recordings",
+    "table": "2",
+    "date": "2026-06-19",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "According to the speaker, what is the state average mid-range price for housing, and what is the current average time a house stays listed on the market?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-2-2026-06-19:12-14",
+    "source_md5": "e24cc3cd9d2eb1593eef457d17c2a0ea"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-2-2026-06-19-1",
+    "drive_file_id": "1LaW4lZzQkU1DohoBklxiz14mh4wFdrP-",
+    "session": "NH1 - In-Person Recordings",
+    "table": "2",
+    "date": "2026-06-19",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "What specific concern about polarization did Roy Schweiker express, and how does it relate to the goal of finding middle-ground solutions?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-2-2026-06-19-1:7-9",
+    "source_md5": "2ca395246a978192ce90c48f8a55c044"
   },
   {
     "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-2-2026-06-19-2",
@@ -281,9 +332,42 @@
     "table": "2",
     "date": "2026-06-19",
     "policy_area": "other",
-    "question": "What are the six conversation agreements that participants are asked to read aloud at the beginning of this community discussion?",
+    "question": "What are the six conversation agreements that participants were instructed to read out loud at the beginning of this rooftop social?",
     "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-2-2026-06-19-2:1-9",
     "source_md5": "4eda6554f31cad20843e9bf63a2ff7c2"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-4-2026-06-18",
+    "drive_file_id": "1FIlLRVtZ-W43vRUjzH3Ap2qMMx43gv9h",
+    "session": "NH1 - In-Person Recordings",
+    "table": "4",
+    "date": "2026-06-18",
+    "policy_area": "Property Taxes and Revenue Needs",
+    "question": "What specific financial burden does S3 claim occurs when a student enrolls in a school outside their home district, using the example of Hillsborough and Londonderry?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-4-2026-06-18:232-233",
+    "source_md5": "abbb83532ccc3180abaefe5c033bc895"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-7-2026-06-18",
+    "drive_file_id": "1qrGXlbiU88qch4A8qDFjKDQ_rKCpHT9u",
+    "session": "NH1 - In-Person Recordings",
+    "table": "7",
+    "date": "2026-06-18",
+    "policy_area": "Public Education Funding",
+    "question": "According to S1's perspective on education quality and funding, what is the tension between allowing families to access alternatives when the public education system is failing while also preventing affluent families from receiving unnecessary public assistance?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-7-2026-06-18:184-188",
+    "source_md5": "1d98167a8da9c9e5870bed2621036b4e"
+  },
+  {
+    "transcript_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-8-2026-06-18",
+    "drive_file_id": "1PQFfhndQj8nnl474Z3TPUJaSrfWMo5sc",
+    "session": "NH1 - In-Person Recordings",
+    "table": "8",
+    "date": "2026-06-18",
+    "policy_area": "Energy Cost, Sourcing, and Reliability",
+    "question": "According to the discussion, what is the price range for firewood per quart, and what effect does the increase in other fuel prices have on firewood prices?",
+    "expected_chunk_id": "nh1-in-person-recordings-nh1-in-person-recordings-table-8-2026-06-18:183-194",
+    "source_md5": "7fa6f1feecdfdda093468186cde04295"
   },
   {
     "transcript_id": "property-taxes-nh-property-taxes-2026-07-21-2",
@@ -292,7 +376,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Property Taxes and Revenue Needs",
-    "question": "What specific dollar amount of statewide property tax funding for education does S4 mention was established through the Claremont decision, and why does S4 want to eliminate this funding mechanism?",
+    "question": "According to the excerpt, what is SWEPT and what does S4 propose should happen to it?",
     "expected_chunk_id": "property-taxes-nh-property-taxes-2026-07-21-2:79-84",
     "source_md5": "276e621f0ab7dabcb4ee4d6c2bc288c5"
   },
@@ -303,7 +387,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Property Taxes and Revenue Needs",
-    "question": "Why is property taxes the biggest concern from Ed Haas's perspective as a city council member in Keene?",
+    "question": "What is Darla Bruno's plan for her full-time job when she retires on the 30th?",
     "expected_chunk_id": "property-taxes-nh-property-taxes-2026-07-21-3:13-19",
     "source_md5": "7d6f234b249ea7b3ade8fe0a5604d543"
   },
@@ -314,7 +398,7 @@
     "table": null,
     "date": "2026-07-21",
     "policy_area": "Property Taxes and Revenue Needs",
-    "question": "What is Michelle's reason for attending this conversation, and what prior community event influenced her decision to participate?",
+    "question": "What community event in Concord did Michelle attend that motivated her to participate in this conversation?",
     "expected_chunk_id": "property-taxes-nh-property-taxes-2026-07-21-4:1-23",
     "source_md5": "3f74b600c7165b503ecbf5896dae5499"
   }
