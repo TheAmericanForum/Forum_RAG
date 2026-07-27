@@ -198,6 +198,17 @@
     "source_md5": "871d5aa5809ea935890932a55d31f2a7"
   },
   {
+    "transcript_id": "nashua-nashua-2026-07-26",
+    "drive_file_id": "1x8iqd34bJqIFadeRPJRL-7r6Tu0wzDQu",
+    "session": "Nashua",
+    "table": null,
+    "date": "2026-07-26",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "According to the speaker from Thornton, what is the minimum price they found for a home in Concord with two bedrooms and no yard in not decent condition?",
+    "expected_chunk_id": "nashua-nashua-2026-07-26:7-13",
+    "source_md5": "86996c6f2dcc7184d845208a467ae98e"
+  },
+  {
     "transcript_id": "nashua-nashua-table-1-2026-07-23",
     "drive_file_id": "1f_t5AvJKv-n6IS1dKrP7nz-c1Yfwqh_a",
     "session": "Nashua",
