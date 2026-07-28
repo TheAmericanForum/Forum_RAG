@@ -89,14 +89,14 @@
   },
   {
     "transcript_id": "carson-city-carson-city-table-1-2026-06-18",
-    "drive_file_id": "1l9v7YhQUFoF09Jw1zgMPRIrktYgXMEQF",
+    "drive_file_id": "1TRlXuonsqCompQOYidOUFUjHXzSY1dlU",
     "session": "Carson City",
     "table": "1",
     "date": "2026-06-18",
     "policy_area": "Rising Cost of Living (Healthcare Focus)",
-    "question": "What specific proposal does S10 make regarding physician staffing in Nevada's 17 counties, and who would pay for it according to the discussion?",
-    "expected_chunk_id": "carson-city-carson-city-table-1-2026-06-18:182-194",
-    "source_md5": "843a9e535b4e01113f3711e26575a931"
+    "question": "According to the discussion, how many counties would need to have a physician and nursing staff paid for by the state to support emergency care access?",
+    "expected_chunk_id": "carson-city-carson-city-table-1-2026-06-18:178-190",
+    "source_md5": "374fe0896a220a648fd1e1c99def18ce"
   },
   {
     "transcript_id": "carson-city-carson-city-table-5-2026-07-01",
@@ -218,72 +218,6 @@
     "question": "What impression did S2 have about the people's attitude toward change, and what metaphor did S2 use to describe their current state?",
     "expected_chunk_id": "housing-nv-housing-2026-07-13-2:1-17",
     "source_md5": "f9d62bbd7756ac54145efb8a0edf9e77"
-  },
-  {
-    "transcript_id": "july-8-vegas-college-of-southern-nevada",
-    "drive_file_id": "1iqPCpQ0cCpPzb1DfDD8mjhyRua47_vy1",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "K-12 Educational Resources, Outcomes, and Accountability",
-    "question": "According to S6, what is the PCFP (Commission on Education Funding) supposed to do, and what problem does S6 identify with how the legislature treats their reports?",
-    "expected_chunk_id": "july-8-vegas-college-of-southern-nevada:221-226",
-    "source_md5": "b8149bd60772de81803e3fd28f26b63e"
-  },
-  {
-    "transcript_id": "july-8-vegas-college-of-southern-nevada-copy",
-    "drive_file_id": "1xSbBPX_mMpMwXtHtywM6NLo9vsPGDsDi",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "According to the introductions in this excerpt, what are the five questions that each person at the table was asked to answer?",
-    "expected_chunk_id": "july-8-vegas-college-of-southern-nevada-copy:28-32",
-    "source_md5": "ff3a73d06db42e4611bd722a07b3f0dd"
-  },
-  {
-    "transcript_id": "july-8-vegas-college-of-southern-nevada-copy-2",
-    "drive_file_id": "1Fu4J66rcnwJWwRvuUqs_6D8f1KTgVLD1",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "According to S4, what was the historical ratio of home price to wages throughout the 20th century before housing costs escalated?",
-    "expected_chunk_id": "july-8-vegas-college-of-southern-nevada-copy-2:5-9",
-    "source_md5": "aeb40fa663b2c455561a0ea73e03a7eb"
-  },
-  {
-    "transcript_id": "july-8-vegas-college-of-southern-nevada-copy-3",
-    "drive_file_id": "1g_SgH7RCE_3SLdK5YTVKIQrC6IHkqMt-",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "According to S3, what cultural emphasis does the Latino community place on homeownership, and why does S3 feel it's now heartbreaking for young people in that community?",
-    "expected_chunk_id": "july-8-vegas-college-of-southern-nevada-copy-3:1-7",
-    "source_md5": "eb7a018214b828a07c7be376a0e1e04c"
-  },
-  {
-    "transcript_id": "july-8-vegas-college-of-southern-nevada-copy-4",
-    "drive_file_id": "1JkHWGKI-vP_jFKUOQfkaTPG1CDnK5pwn",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "Why did the speaker mention that rent stabilization efforts failed both at the state legislature level and in North Las Vegas at the local level?",
-    "expected_chunk_id": "july-8-vegas-college-of-southern-nevada-copy-4:21-26",
-    "source_md5": "11636fe3e6fb56ad1f40cdcbc699eea8"
-  },
-  {
-    "transcript_id": "july-8-vegas-college-of-southern-nevada-copy-5",
-    "drive_file_id": "1DK2PhNk5m1b8Pu6mDTC2k1PqY_laJXii",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "What are the three specific options discussed for addressing affordable housing that the group is considering for unanimous agreement?",
-    "expected_chunk_id": "july-8-vegas-college-of-southern-nevada-copy-5:1-13",
-    "source_md5": "5bf8e5de1f49cf19a09d4b1fce48ee12"
   },
   {
     "transcript_id": "july-8-vegas-july-8-vegas-2026-07-09",
@@ -427,28 +361,6 @@
     "question": "According to S3's account of the KNPR interview with Southern Nevada Water Authority officials, what was the water authority's response when asked how much water Nevada would receive in return for the $750 million payment to California?",
     "expected_chunk_id": "july-8-vegas-july-8-vegas-table-8-2026-07-09:119-127",
     "source_md5": "787276e196068ab8914ec897cc22b043"
-  },
-  {
-    "transcript_id": "july-8-vegas-july-9th-community-conversation-on-housing-stability-affordability",
-    "drive_file_id": "1i_HJW1XrY3iTen0GdWGGD4rEPYOilC_r",
-    "session": "July 8 Vegas",
-    "table": null,
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "What specific housing program is being promoted to prevent corporate buyers from purchasing properties while allowing homeowners to build equity at a cheaper price point?",
-    "expected_chunk_id": "july-8-vegas-july-9th-community-conversation-on-housing-stability-affordability:99-110",
-    "source_md5": "9f1e6f58a8cb77e373409d912d742152"
-  },
-  {
-    "transcript_id": "july-8-vegas-table-4-housing-csn-community-conversation-1",
-    "drive_file_id": "1yVte1lsvh4-CVMhR5OAgwouE3Ro3trE_",
-    "session": "July 8 Vegas",
-    "table": "4",
-    "date": null,
-    "policy_area": "Housing Affordability",
-    "question": "According to the transcript, what is the current legal timeframe for an eviction to be removed from someone's credit report, and what alternative timeframe was proposed as a legislative solution?",
-    "expected_chunk_id": "july-8-vegas-table-4-housing-csn-community-conversation-1:242-251",
-    "source_md5": "63d77f8eb7c3100940b0aeeb7d45ccf7"
   },
   {
     "transcript_id": "reno-reno-2026-07-02",
