@@ -231,6 +231,17 @@
     "source_md5": "2045e5f4fabf48c157e260c37911267a"
   },
   {
+    "transcript_id": "7-23-florence-7-23-florence-2026-07-29",
+    "drive_file_id": "1CECdl4bn2lb-BKQiPdxeH0HZu8I3LTQF",
+    "session": "7:23 Florence",
+    "table": null,
+    "date": "2026-07-29",
+    "policy_area": "Slow Wage Growth",
+    "question": "What wage increase did S2 receive as a maintenance worker at Nanya, and what was the original wage they were making?",
+    "expected_chunk_id": "7-23-florence-7-23-florence-2026-07-29:9-13",
+    "source_md5": "cb66e8cdfb4421570c687da72b9b2bf8"
+  },
+  {
     "transcript_id": "infrastructure-sc-infrastructure-2026-06-16",
     "drive_file_id": "1zjHFYm3OZxQ9SmBzdcW9gDDUqeHJloUR",
     "session": "Infrastructure ",
