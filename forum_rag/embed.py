@@ -50,8 +50,8 @@ def _embed_batch(texts: list[str], model: str) -> list[list[float]]:
     except Exception as e:
         if is_retryable_api_error(e):
             log.warning("Embedding call failed, will retry: %s", e)
-            raise
-        log.error("Embedding call failed (non-retryable): %s", e)
+        else:
+            log.error("Embedding call failed (non-retryable): %s", e)
         raise ExternalServiceError(f"OpenAI embedding request failed: {e}") from e
     return [embedding_data.embedding for embedding_data in resp.data]
 

@@ -439,8 +439,8 @@ def _call_retrieval_planner(client, settings, messages: list[dict], round_num: i
     except Exception as e:
         if is_retryable_api_error(e):
             log.warning("Retrieval planner call failed (round %d), will retry: %s", round_num, e)
-            raise
-        log.error("Retrieval planner call failed (round %d, non-retryable): %s", round_num, e)
+        else:
+            log.error("Retrieval planner call failed (round %d, non-retryable): %s", round_num, e)
         raise ExternalServiceError(f"Anthropic retrieval-planning request failed: {e}") from e
 
 
