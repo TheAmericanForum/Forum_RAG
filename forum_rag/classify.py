@@ -79,8 +79,8 @@ def _classify_one(text: str, area_names: list[str], descriptions: list[str]) -> 
     except Exception as e:
         if is_retryable_api_error(e):
             log.warning("Classify call failed, will retry: %s", e)
-            raise
-        log.error("Classify call failed (non-retryable): %s", e)
+        else:
+            log.error("Classify call failed (non-retryable): %s", e)
         raise ExternalServiceError(f"Anthropic classify request failed: {e}") from e
 
     text_out = next((b.text for b in resp.content if b.type == "text"), "{}")

@@ -17,6 +17,8 @@ class ExternalServiceError(RuntimeError):
 
 
 def is_retryable_api_error(exc: BaseException) -> bool:
+    if isinstance(exc, ExternalServiceError) and exc.__cause__ is not None:
+        exc = exc.__cause__
     status = getattr(exc, "status_code", None)
     if status is None:
         # Connection errors etc. have no status_code — worth retrying.
