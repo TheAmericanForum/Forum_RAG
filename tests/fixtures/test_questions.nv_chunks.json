@@ -331,14 +331,14 @@
   },
   {
     "transcript_id": "july-8-vegas-july-8-vegas-table-4-2026-07-13",
-    "drive_file_id": "1VlkoeeIMkNO_EiZ5kFZIaRM53M8Vs0ao",
+    "drive_file_id": "15O3sNR5OGO37NfELCPTqoUS7Q33LzwI3",
     "session": "July 8 Vegas",
     "table": "4",
     "date": "2026-07-13",
     "policy_area": "Housing Affordability",
-    "question": "According to the excerpt, how long is an eviction currently supposed to stay on a person's credit report, and what does one speaker compare this timeframe to?",
-    "expected_chunk_id": "july-8-vegas-july-8-vegas-table-4-2026-07-13:242-251",
-    "source_md5": "a9190455d2bfab2ad9e1f5c6dc8eb892"
+    "question": "What specific concern does S1 raise about landlords being unable to evict tenants who aren't paying rent, and what trade-off does he identify?",
+    "expected_chunk_id": "july-8-vegas-july-8-vegas-table-4-2026-07-13:175-180",
+    "source_md5": "30ebc363f13bffd91417d49143d2790d"
   },
   {
     "transcript_id": "july-8-vegas-july-8-vegas-table-7-2026-07-09",
