@@ -55,6 +55,39 @@
     "source_md5": "b48f735722321991d83c2a8ddec248e9"
   },
   {
+    "transcript_id": "concord-concord-table-2-2026-08-10",
+    "drive_file_id": "18YZ-xbOe9PTqqanUGevpWZM9uhpprXJJ",
+    "session": "Concord",
+    "table": "2",
+    "date": "2026-08-10",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "What specific Housing Champions program does S4 reference as an example of how incentives can help communities address housing issues?",
+    "expected_chunk_id": "concord-concord-table-2-2026-08-10:53-54",
+    "source_md5": "2cb6960a16f014592b5c3d8df98b97d0"
+  },
+  {
+    "transcript_id": "concord-concord-table-2-2026-08-10-1",
+    "drive_file_id": "14JZqH3QvWCJPKu4N1Z5U7JItsTI639Sb",
+    "session": "Concord",
+    "table": "2",
+    "date": "2026-08-10",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "According to the speaker's experience with public employee retirement policy, why do legislators sometimes vote \"yes\" on housing solutions without fully evaluating them, and what approach does the speaker propose instead?",
+    "expected_chunk_id": "concord-concord-table-2-2026-08-10-1:10-24",
+    "source_md5": "f973803926f497203ed58a1d7a671e55"
+  },
+  {
+    "transcript_id": "concord-concord-table-2-2026-08-10-2",
+    "drive_file_id": "1p1nwchtmHS_h2TIuwBl5fVqpM5w4YGm6",
+    "session": "Concord",
+    "table": "2",
+    "date": "2026-08-10",
+    "policy_area": "Housing Affordability and Ownership",
+    "question": "According to the discussion, what historical example from the 1980s is cited regarding how housing affordability problems were previously resolved, and what warning does the speaker offer about that outcome?",
+    "expected_chunk_id": "concord-concord-table-2-2026-08-10-2:12-18",
+    "source_md5": "16de2283db59f4489a0fdda4996ec9fe"
+  },
+  {
     "transcript_id": "concord-concord-table-4-2026-06-18",
     "drive_file_id": "1sdnboo7WH9j2FY_EVMKWjXDUG2ordblZ",
     "session": "Concord",
@@ -188,14 +221,14 @@
   },
   {
     "transcript_id": "nashua-nashua-2026-07-23-2",
-    "drive_file_id": "19ygQxirLDv6Y-weo0W_3ZZVrVvo4irDF",
+    "drive_file_id": "1tvBbyBx0KEeWp26fUQ2twU9aiws7ioCX",
     "session": "Nashua",
     "table": null,
     "date": "2026-07-23",
-    "policy_area": "Public Education Funding",
-    "question": "What specific law about sports eligibility prevented S5's son from playing basketball at his charter school, the Academy of Science and Design?",
+    "policy_area": "K-12 Education Outcome",
+    "question": "What specific issue prevented S5's son from playing basketball while attending the Academy of Science and Design charter school in Nashua?",
     "expected_chunk_id": "nashua-nashua-2026-07-23-2:44-53",
-    "source_md5": "871d5aa5809ea935890932a55d31f2a7"
+    "source_md5": "0a46fd29e9eabdb91a5a582aa4debf64"
   },
   {
     "transcript_id": "nashua-nashua-2026-07-26",
