@@ -7,10 +7,12 @@ join key against drive.list_transcript_files().
 """
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from typing import Any
 
 from . import drive, store
+from .parse import parse_transcript
 
 # Sort/priority order for rows: problems first, so they're what you see without scrolling.
 _STATUS_ORDER = ["missing", "stale", "synced"]
@@ -54,12 +56,32 @@ def _qdrant_sources() -> dict[str, dict[str, Any]]:
     return by_file
 
 
+def _missing_reason(drive_file: Any) -> str:
+    """Why a Drive file with no indexed chunks was skipped at ingest time.
+
+    Downloads and parses the file the same way ingest_data.py does, so a 0-turn
+    recording (which ingest_one() silently skips — chunk_transcript() returns no
+    chunks, so nothing is ever upserted) is distinguishable from one that's simply
+    not ingested yet, or one that fails to download/parse.
+    """
+    try:
+        raw = drive.download_file(drive_file.id)
+        transcript = parse_transcript(json.loads(raw), filename=drive_file.name)
+    except Exception:
+        return "error"
+    return "no_turns" if not transcript.turns else "not_indexed"
+
+
 def reconcile_sources() -> dict[str, Any]:
     """Join Qdrant's indexed files against the live Drive listing.
 
     Returns {"summary": {status: count}, "rows": [...]}, rows sorted problem-statuses
-    first. Raises ConfigError/ExternalServiceError (from drive/store) on failure —
-    callers handle those the same way as any other Qdrant/Drive-backed endpoint.
+    first. Every row carries a "reason" key, non-None only for "missing" rows: one of
+    "no_turns" (recording has an empty transcript — expected, not a build failure),
+    "not_indexed" (non-empty transcript just hasn't been ingested yet), or "error"
+    (download/parse failed). Raises ConfigError/ExternalServiceError (from drive/store)
+    on failure — callers handle those the same way as any other Qdrant/Drive-backed
+    endpoint.
     """
     qdrant_by_file = _qdrant_sources()
     drive_files = drive.list_transcript_files()
@@ -83,6 +105,7 @@ def reconcile_sources() -> dict[str, Any]:
                 "drive_file_id": drive_file_id,
                 "name": record["source_file"] or (drive_file.name if drive_file else record["transcript_id"]),
                 "status": status,
+                "reason": None,
                 "session": record["session"],
                 "table": record["table"],
                 "date": record["date"],
@@ -101,6 +124,7 @@ def reconcile_sources() -> dict[str, Any]:
                 "drive_file_id": drive_file.id,
                 "name": drive_file.name,
                 "status": "missing",
+                "reason": _missing_reason(drive_file),
                 "session": None,
                 "table": None,
                 "date": None,

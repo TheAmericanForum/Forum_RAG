@@ -16,6 +16,12 @@ const STATUS_LABEL = {
   missing: "Missing",
 };
 
+const REASON_LABEL = {
+  no_turns: "Empty transcript (0 turns)",
+  not_indexed: "Not yet ingested",
+  error: "Failed to download/parse",
+};
+
 let sourcesLoaded = false;
 
 function showView(view) {
@@ -63,6 +69,7 @@ function renderTable(rows) {
     const badge = document.createElement("span");
     badge.className = `status-badge status-${row.status}`;
     badge.textContent = STATUS_LABEL[row.status] || row.status;
+    if (row.reason && REASON_LABEL[row.reason]) badge.title = REASON_LABEL[row.reason];
     statusTd.appendChild(badge);
 
     const nameTd = document.createElement("td");
